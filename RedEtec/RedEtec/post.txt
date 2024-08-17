@@ -1,0 +1,19 @@
+import React from 'react';
+import {View, Text, StyleSheet, TouchableOpacity, Image, TextInput} from 'react-native';
+import {Ionicons} from '@expo/vector-icons'
+
+function PostScreen() {
+    return (
+        <View style={styles.container}>
+            <Text style={styles.title}>Post Screen</Text>
+        </View>
+    )
+}
+
+const styles = StyleSheet.create({
+    constainer: {
+        flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
+    }
+})
