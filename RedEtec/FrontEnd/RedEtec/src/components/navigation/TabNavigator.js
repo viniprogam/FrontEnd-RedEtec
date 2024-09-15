@@ -1,9 +1,9 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import Feather from 'react-native-vector-icons/Feather'; // Altere para importar Feather
-import HomeScreen from '../pages/Home/HomeScreen';
-import PostScreen from '../pages/Post/PostScreen';
-import ProfileScreen from '../pages/Profile/ProfileScreen';
+import Feather from 'react-native-vector-icons/Feather';
+import HomeScreen from '../../components/pages/Home/HomeScreen';
+import PostScreen from '../../components/pages/Post/PostScreen';
+import ProfileScreen from '../../components/pages/Profile/ProfileScreen';
 import ChatStackNavigator from './ChatStackNavigator';
 
 const Tab = createBottomTabNavigator();

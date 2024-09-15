@@ -1,9 +1,9 @@
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
-import AuthNavigator from './src/navigation/AuthNavigator';
-import { PostProvider } from './src/context/PostContext';
-import { UserProfileProvider } from './src/context/UserProfileContext';
+import AuthNavigator from './src/components/navigation/AuthNavigator';
+import { PostProvider } from './src/components/context/PostContext';
+import { UserProfileProvider } from './src/components/context/UserProfileContext';
 
 export default function App() {
   return (

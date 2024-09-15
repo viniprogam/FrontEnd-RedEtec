@@ -1,8 +1,8 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import ChatScreen from '../pages/Chat/ChatScreen';
-import GroupChatScreen from '../pages/Chat/GroupChatScreen';
-import PrivateChatScreen from '../pages/Chat/PrivateChatScreen';
+import ChatScreen from '../../components/pages/Chat/ChatScreen';
+import GroupChatScreen from '../../components/pages/Chat/GroupChatScreen';
+import PrivateChatScreen from '../../components/pages/Chat/PrivateChatScreen';
 
 const Stack = createNativeStackNavigator();
 

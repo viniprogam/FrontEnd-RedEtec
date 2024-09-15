@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { View, Text, StyleSheet, TextInput, Image, TouchableOpacity } from "react-native";
 import Icon from 'react-native-vector-icons/Feather'; // Verifique se está instalado corretamente
 import { useNavigation } from "@react-navigation/native";
-import { login } from '../../api.js';
+import { login } from '../../services/api.js';
 
 export default function LoginScreen() {
     const navigation = useNavigation();
