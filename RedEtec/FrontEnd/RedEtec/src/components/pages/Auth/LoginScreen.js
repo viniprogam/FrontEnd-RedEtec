@@ -31,7 +31,7 @@ export default function LoginScreen() {
         <View style={styles.container}>
             <View style={styles.imgContainer}>
                 <Image
-                    source={require('../../../assets/Logo.png')} // Verifique se o caminho está correto
+                    source={require('../../../../assets/Logo.png')}
                     style={styles.logo}
                     resizeMode="contain"
                 />
@@ -63,7 +63,7 @@ export default function LoginScreen() {
                             style={styles.eyeIcon}
                         >
                             <Icon
-                                name={passwordVisible ? "eye-off" : "eye"} // Ícone correto
+                                name={passwordVisible ? "eye-off" : "eye"}
                                 size={20}
                                 color="#040915"
                             />

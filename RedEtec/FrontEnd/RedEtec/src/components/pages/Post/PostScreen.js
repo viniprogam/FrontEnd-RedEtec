@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image, Alert, ScrollView, Platform } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
-import { usePosts } from '../../context/PostContext'; // Ajuste o caminho conforme necessário
+import axios from 'axios';
 
 const colors = {
     primary: '#040915',
@@ -16,7 +16,6 @@ export default function PostScreen() {
     const [postText, setPostText] = useState('');
     const [selectedImage, setSelectedImage] = useState(null);
     const navigation = useNavigation();
-    const { addPost } = usePosts(); // Usar o contexto
 
     useEffect(() => {
         (async () => {
@@ -42,21 +41,41 @@ export default function PostScreen() {
         }
     };
 
-    const handlePost = () => {
+    const handlePost = async () => {
         if (!selectedImage) {
             Alert.alert('Erro', 'Por favor, selecione uma imagem.');
             return;
         }
 
-        // Adicionar o post ao contexto
-        addPost({
-            text: postText.trim(), // Adiciona a legenda, se houver
-            imageUri: selectedImage,
+        const formData = new FormData();
+        formData.append('postagem', JSON.stringify({
+            Texto_Postagem: postText.trim(),
+        }));
+        formData.append('file', {
+            uri: selectedImage,
+            name: 'photo.jpg', // ou o nome do arquivo que você preferir
+            type: 'image/jpeg', // ajuste o tipo conforme necessário
         });
 
-        setPostText('');
-        setSelectedImage(null);
-        navigation.navigate('Home'); // Navegar para a HomeScreen
+        try {
+            const response = await axios.post('https://localhost:7140/api/Postagem', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+
+            if (response.status === 201) {
+                Alert.alert('Sucesso', 'Postagem criada com sucesso!');
+                setPostText('');
+                setSelectedImage(null);
+                navigation.navigate('Home'); // Navegar para a HomeScreen
+            } else {
+                Alert.alert('Erro', 'Houve um problema ao criar a postagem.');
+            }
+        } catch (error) {
+            console.error('Erro ao criar a postagem:', error);
+            Alert.alert('Erro', 'Houve um problema ao criar a postagem.');
+        }
     };
 
     return (
