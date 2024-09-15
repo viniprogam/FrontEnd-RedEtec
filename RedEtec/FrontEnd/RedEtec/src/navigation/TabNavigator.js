@@ -1,6 +1,6 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import Feather from 'react-native-vector-icons/Feather'; // Altere para importar Feather
 import HomeScreen from '../pages/Home/HomeScreen';
 import PostScreen from '../pages/Post/PostScreen';
 import ProfileScreen from '../pages/Profile/ProfileScreen';
@@ -17,22 +17,22 @@ export default function TabNavigator() {
 
                     switch (route.name) {
                         case 'Home':
-                            iconName = 'home';
+                            iconName = 'home'; // Ícone Feather para Home
                             break;
                         case 'Post':
-                            iconName = 'pencil-box';
+                            iconName = 'edit-2'; // Ícone Feather para Post (equivalente ao pencil-box)
                             break;
                         case 'Chat':
-                            iconName = 'chat';
+                            iconName = 'message-circle'; // Ícone Feather para Chat
                             break;
                         case 'Profile':
-                            iconName = 'account';
+                            iconName = 'user'; // Ícone Feather para Profile
                             break;
                         default:
-                            iconName = 'circle';
+                            iconName = 'circle'; // Ícone Feather padrão
                     }
 
-                    return <MaterialCommunityIcons name={iconName} size={size} color={color} />;
+                    return <Feather name={iconName} size={size} color={color} />; // Use Feather aqui
                 },
                 tabBarActiveTintColor: '#040915',
                 tabBarInactiveTintColor: '#8A8F9E',

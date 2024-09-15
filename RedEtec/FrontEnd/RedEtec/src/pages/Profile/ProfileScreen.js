@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput, Modal, Button } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 
 const colors = {
     primary: '#040915',
@@ -10,10 +11,35 @@ const colors = {
 };
 
 export default function ProfileScreen() {
-    const [email_Usuario, setEmail_Usuario] = useState('user@example.com');
-    const [cidade_Usuario, setCidade_Usuario] = useState('São Paulo');
-    const [data_Nascimento_Usuario, setData_Nascimento_Usuario] = useState('01/01/2000');
-    const [sexo_Usuario, setSexo_Usuario] = useState('Masculino');
+    const [username, setUsername] = useState('Nome do Usuário');
+    const [editModalVisible, setEditModalVisible] = useState(false);
+    const [newUsername, setNewUsername] = useState(username);
+    const [profileImage, setProfileImage] = useState('https://via.placeholder.com/150'); // Imagem de perfil placeholder
+    const [seguidores, setSeguidores] = useState(150); // Exemplo de número de seguidores
+    const [seguindo, setSeguindo] = useState(200); // Exemplo de número de seguindo
+
+    useEffect(() => {
+        // Simular o carregamento de dados do perfil
+        // Aqui você pode fazer uma chamada à API para obter os dados reais
+    }, []);
+
+    const handleEditProfile = () => {
+        setUsername(newUsername);
+        setEditModalVisible(false);
+    };
+
+    const pickImage = async () => {
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 1,
+        });
+
+        if (!result.canceled) {
+            setProfileImage(result.assets[0].uri);
+        }
+    };
 
     return (
         <View style={styles.container}>
@@ -31,28 +57,50 @@ export default function ProfileScreen() {
             </View>
             <View style={styles.profileContainer}>
                 <View style={styles.header}>
-                    <Image
-                        style={styles.profileImage}
-                        source={{ uri: 'https://via.placeholder.com/150' }} // Imagem de perfil placeholder
-                    />
-                    <Text style={styles.username}>Nome do Usuário</Text>
+                    <TouchableOpacity onPress={pickImage}>
+                        <Image
+                            style={styles.profileImage}
+                            source={{ uri: profileImage }}
+                        />
+                    </TouchableOpacity>
+                    <Text style={styles.username}>{username}</Text>
                 </View>
                 <View style={styles.infoContainer}>
-                    <Text style={styles.infoLabel}>Email:</Text>
-                    <Text style={styles.infoText}>{email_Usuario}</Text>
-
-                    <Text style={styles.infoLabel}>Cidade:</Text>
-                    <Text style={styles.infoText}>{cidade_Usuario}</Text>
-
-                    <Text style={styles.infoLabel}>Data de Nascimento:</Text>
-                    <Text style={styles.infoText}>{data_Nascimento_Usuario}</Text>
-
-                    <Text style={styles.infoLabel}>Sexo:</Text>
-                    <Text style={styles.infoText}>{sexo_Usuario}</Text>
+                    <View style={styles.followInfoContainer}>
+                        <View style={styles.followItem}>
+                            <Text style={styles.followLabel}>Seguidores</Text>
+                            <Text style={styles.followCount}>{seguidores}</Text>
+                        </View>
+                        <View style={styles.followItem}>
+                            <Text style={styles.followLabel}>Seguindo</Text>
+                            <Text style={styles.followCount}>{seguindo}</Text>
+                        </View>
+                    </View>
                 </View>
-                <TouchableOpacity style={styles.editButton}>
+                <TouchableOpacity style={styles.editButton} onPress={() => setEditModalVisible(true)}>
                     <Text style={styles.editButtonText}>Editar Perfil</Text>
                 </TouchableOpacity>
+
+                {/* Modal de edição */}
+                <Modal
+                    visible={editModalVisible}
+                    animationType="slide"
+                    transparent={true}
+                    onRequestClose={() => setEditModalVisible(false)}
+                >
+                    <View style={styles.modalContainer}>
+                        <View style={styles.modalContent}>
+                            <Text style={styles.modalTitle}>Editar Nome</Text>
+                            <TextInput
+                                style={styles.modalInput}
+                                value={newUsername}
+                                onChangeText={setNewUsername}
+                            />
+                            <Button title="Salvar" onPress={handleEditProfile} />
+                            <Button title="Cancelar" onPress={() => setEditModalVisible(false)} />
+                        </View>
+                    </View>
+                </Modal>
             </View>
         </View>
     );
@@ -114,16 +162,25 @@ const styles = StyleSheet.create({
     infoContainer: {
         marginVertical: 20,
     },
-    infoLabel: {
+    followInfoContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    followItem: {
+        flex: 1,
+        alignItems: 'center',
+        paddingHorizontal: 10,
+    },
+    followLabel: {
         fontSize: 18,
         fontWeight: '500',
         color: colors.secondary,
-        marginBottom: 5,
     },
-    infoText: {
-        fontSize: 16,
+    followCount: {
+        fontSize: 24,
+        fontWeight: '600',
         color: colors.primary,
-        marginBottom: 15,
+        marginTop: 5,
     },
     editButton: {
         backgroundColor: colors.primary,
@@ -136,5 +193,29 @@ const styles = StyleSheet.create({
         color: colors.text,
         fontSize: 16,
         fontWeight: '600',
+    },
+    modalContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semitransparente para dar destaque ao modal
+    },
+    modalContent: {
+        width: '80%',
+        padding: 20,
+        backgroundColor: 'white',
+        borderRadius: 10,
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginBottom: 10,
+    },
+    modalInput: {
+        borderColor: colors.border,
+        borderWidth: 1,
+        borderRadius: 5,
+        padding: 10,
+        marginBottom: 20,
     },
 });

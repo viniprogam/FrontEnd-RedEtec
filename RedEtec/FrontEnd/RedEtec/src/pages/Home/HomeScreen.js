@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet, Image, ScrollView } from "react-native";
+import { usePosts } from '../../context/PostContext'; // Ajuste o caminho conforme necessário
 
 const colors = {
     primary: '#040915',
@@ -10,6 +11,8 @@ const colors = {
 };
 
 export default function HomeScreen() {
+    const { posts } = usePosts(); // Obter os posts do contexto
+
     return (
         <View style={styles.container}>
             <View style={styles.headerContainer}>
@@ -26,57 +29,24 @@ export default function HomeScreen() {
             </View>
 
             <ScrollView contentContainerStyle={styles.postContainer}>
-                
-                <View style={styles.post}>
-                    <View style={styles.postHeader}>
+                {posts.map((post, index) => (
+                    <View key={index} style={styles.post}>
+                        <View style={styles.postHeader}>
+                            <Image
+                                style={styles.userAvatar}
+                                source={require('../../../assets/Ney.jpg')}
+                            />
+                            <Text style={styles.userName}>Você</Text>
+                        </View>
                         <Image
-                            style={styles.userAvatar}
-                            source={require('../../../assets/Ney.jpg')}
+                            style={styles.imgPost}
+                            source={{ uri: post.imageUri }}
                         />
-                        <Text style={styles.userName}>Menino ney</Text>
+                        <View style={styles.postFooter}>
+                            <Text style={styles.postDescription}>{post.text}</Text>
+                        </View>
                     </View>
-                    <Image
-                        style={styles.imgPost}
-                        source={require('../../../assets/neypost.jpg')}
-                    />
-                    <View style={styles.postFooter}>
-                        <Text style={styles.postDescription}>Saudades do que a gente não viveu ainda❤️</Text>
-                    </View>
-                </View>
-
-                <View style={styles.post}>
-                    <View style={styles.postHeader}>
-                        <Image
-                            style={styles.userAvatar}
-                            source={require('../../../assets/chico.jpg')}
-                        />
-                        <Text style={styles.userName}>Chico Coins</Text>
-                    </View>
-                    <Image
-                        style={styles.imgPost}
-                        source={require('../../../assets/chicopost.jpg')}
-                    />
-                    <View style={styles.postFooter}>
-                        <Text style={styles.postDescription}>Eu teeentei, não ser muleque com você😝</Text>
-                    </View>
-                </View>
-
-                <View style={styles.post}>
-                    <View style={styles.postHeader}>
-                        <Image
-                            style={styles.userAvatar}
-                            source={require('../../../assets/aspect.jpg')}
-                        />
-                        <Text style={styles.userName}>Aspect</Text>
-                    </View>
-                    <Image
-                        style={styles.imgPost}
-                        source={require('../../../assets/aspectpost.jpg')}
-                    />
-                    <View style={styles.postFooter}>
-                        <Text style={styles.postDescription}>Fazendo gracinha na frente do Pecas🤪</Text>
-                    </View>
-                </View>
+                ))}
             </ScrollView>
         </View>
     );
@@ -95,7 +65,7 @@ const styles = StyleSheet.create({
     },
     logoContainer: {
         position: 'absolute',
-        top: 40,
+        top:40,
         left: 20,
     },
     logo: {

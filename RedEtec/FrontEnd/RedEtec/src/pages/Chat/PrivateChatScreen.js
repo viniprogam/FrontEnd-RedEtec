@@ -24,7 +24,9 @@ export default function PrivateChatScreen({ route }) {
 
     return (
         <View style={styles.container}>
-            <Text style={styles.header}>{conversation.name}</Text>
+            <View style={styles.header}>
+                <Text style={styles.nameUser}>{conversation.name}</Text>
+            </View>
             <ScrollView style={styles.messageContainer}>
                 {messages.map((msg, index) => (
                     <View
@@ -56,10 +58,17 @@ const styles = StyleSheet.create({
         backgroundColor: colors.background,
     },
     header: {
+        height: 96,
         fontSize: 24,
-        padding: 10,
         backgroundColor: colors.secondary,
+    },
+    nameUser: {
         color: colors.text,
+        fontFamily: 'Noto Serif',
+        paddingLeft: 50,
+        paddingVertical: 46,
+        fontWeight: '600',
+        fontSize: 26
     },
     messageContainer: {
         flex: 1,
