@@ -1,6 +1,8 @@
+// ProfileScreen.js
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput, Modal, Button } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import { useUserProfile } from '../../context/UserProfileContext';
 
 const colors = {
     primary: '#040915',
@@ -11,12 +13,9 @@ const colors = {
 };
 
 export default function ProfileScreen() {
-    const [username, setUsername] = useState('Nome do Usuário');
+    const { profile, setProfile } = useUserProfile();
     const [editModalVisible, setEditModalVisible] = useState(false);
-    const [newUsername, setNewUsername] = useState(username);
-    const [profileImage, setProfileImage] = useState('https://via.placeholder.com/150'); // Imagem de perfil placeholder
-    const [seguidores, setSeguidores] = useState(150); // Exemplo de número de seguidores
-    const [seguindo, setSeguindo] = useState(200); // Exemplo de número de seguindo
+    const [newUsername, setNewUsername] = useState(profile.username);
 
     useEffect(() => {
         // Simular o carregamento de dados do perfil
@@ -24,7 +23,10 @@ export default function ProfileScreen() {
     }, []);
 
     const handleEditProfile = () => {
-        setUsername(newUsername);
+        setProfile(prevProfile => ({
+            ...prevProfile,
+            username: newUsername
+        }));
         setEditModalVisible(false);
     };
 
@@ -37,7 +39,10 @@ export default function ProfileScreen() {
         });
 
         if (!result.canceled) {
-            setProfileImage(result.assets[0].uri);
+            setProfile(prevProfile => ({
+                ...prevProfile,
+                profileImage: result.assets[0].uri
+            }));
         }
     };
 
@@ -60,20 +65,20 @@ export default function ProfileScreen() {
                     <TouchableOpacity onPress={pickImage}>
                         <Image
                             style={styles.profileImage}
-                            source={{ uri: profileImage }}
+                            source={{ uri: profile.profileImage }}
                         />
                     </TouchableOpacity>
-                    <Text style={styles.username}>{username}</Text>
+                    <Text style={styles.username}>{profile.username}</Text>
                 </View>
                 <View style={styles.infoContainer}>
                     <View style={styles.followInfoContainer}>
                         <View style={styles.followItem}>
                             <Text style={styles.followLabel}>Seguidores</Text>
-                            <Text style={styles.followCount}>{seguidores}</Text>
+                            <Text style={styles.followCount}>{profile.seguidores}</Text>
                         </View>
                         <View style={styles.followItem}>
                             <Text style={styles.followLabel}>Seguindo</Text>
-                            <Text style={styles.followCount}>{seguindo}</Text>
+                            <Text style={styles.followCount}>{profile.seguindo}</Text>
                         </View>
                     </View>
                 </View>

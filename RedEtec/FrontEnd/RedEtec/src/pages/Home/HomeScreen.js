@@ -1,6 +1,8 @@
+// HomeScreen.js
 import React from "react";
 import { View, Text, StyleSheet, Image, ScrollView } from "react-native";
-import { usePosts } from '../../context/PostContext'; // Ajuste o caminho conforme necessário
+import { usePosts } from '../../context/PostContext';
+import { useUserProfile } from '../../context/UserProfileContext';
 
 const colors = {
     primary: '#040915',
@@ -12,6 +14,7 @@ const colors = {
 
 export default function HomeScreen() {
     const { posts } = usePosts(); // Obter os posts do contexto
+    const { profile } = useUserProfile(); // Obter os dados do perfil do contexto
 
     return (
         <View style={styles.container}>
@@ -34,9 +37,9 @@ export default function HomeScreen() {
                         <View style={styles.postHeader}>
                             <Image
                                 style={styles.userAvatar}
-                                source={require('../../../assets/Ney.jpg')}
+                                source={{ uri: profile.profileImage }}
                             />
-                            <Text style={styles.userName}>Você</Text>
+                            <Text style={styles.userName}>{profile.username}</Text>
                         </View>
                         <Image
                             style={styles.imgPost}

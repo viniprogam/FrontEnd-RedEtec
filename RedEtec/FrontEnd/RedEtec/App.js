@@ -3,6 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import AuthNavigator from './src/navigation/AuthNavigator';
 import { PostProvider } from './src/context/PostContext';
+import { UserProfileProvider } from './src/context/UserProfileContext';
 
 export default function App() {
   return (
@@ -12,9 +13,11 @@ export default function App() {
         backgroundColor="#1E2A38"
         style="light"
       />
-      <PostProvider>
-        <AuthNavigator />
-      </PostProvider>
+      <UserProfileProvider>
+        <PostProvider>
+          <AuthNavigator />
+        </PostProvider>
+      </UserProfileProvider>
     </NavigationContainer>
   );
 }
