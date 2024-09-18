@@ -52,9 +52,7 @@ export default function PostScreen() {
         }
 
         const formData = new FormData();
-        formData.append('postagem', JSON.stringify({
-            Legenda_Postagem: postText.trim(),
-        }));
+        formData.append('Legenda_Postagem', postText.trim())
         formData.append('file', file.file);
 
         try {
@@ -102,7 +100,7 @@ export default function PostScreen() {
 
                 {file && (
                     <View style={styles.previewContainer}>
-                        <Image source={{ uri: file.URL }} style={styles.selectedImage} />
+                        <Image source={{ uri: file.uri }} style={styles.selectedImage} />
                     </View>
                 )}
 
