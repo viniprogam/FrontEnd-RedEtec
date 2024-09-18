@@ -1,8 +1,6 @@
-// HomeScreen.js
-import React from "react";
-import { View, Text, StyleSheet, Image, ScrollView } from "react-native";
-import { usePosts } from '../../context/PostContext';
-import { useUserProfile } from '../../context/UserProfileContext';
+import React, { useEffect, useState } from "react";
+import { View, Text, StyleSheet, Image, ScrollView, ActivityIndicator } from "react-native";
+import axios from 'axios'; // Certifique-se de ter o axios instalado
 
 const colors = {
     primary: '#040915',
@@ -13,8 +11,31 @@ const colors = {
 };
 
 export default function HomeScreen() {
-    const { posts } = usePosts(); // Obter os posts do contexto
-    const { profile } = useUserProfile(); // Obter os dados do perfil do contexto
+    const [posts, setPosts] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchPosts = async () => {
+            try {
+                const response = await axios.get('https://localhost:44315/api/Postagem/postagens');
+                setPosts(response.data);
+                console.log(posts)
+                console.log(response)
+                console.log(response.data)
+            } catch (error) {
+                console.error("Erro ao buscar postagens:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchPosts();
+    }, []);
+
+
+    if (loading) {
+        return <ActivityIndicator size="large" color={colors.primary} />;
+    }
 
     return (
         <View style={styles.container}>
@@ -37,16 +58,16 @@ export default function HomeScreen() {
                         <View style={styles.postHeader}>
                             <Image
                                 style={styles.userAvatar}
-                                source={{ uri: profile.profileImage }}
+                                source={require('../../../../assets/perfil.png')} // Exibe a imagem ou um placeholder
                             />
-                            <Text style={styles.userName}>{profile.username}</Text>
+                            <Text style={styles.userName}>{post.Id_Usuario}</Text>
                         </View>
                         <Image
                             style={styles.imgPost}
-                            source={{ uri: post.imageUri }}
+                            source={{ uri: `https://localhost:44315/api/Postagem/imagem/${post.imageUrl}`}}
                         />
                         <View style={styles.postFooter}>
-                            <Text style={styles.postDescription}>{post.text}</Text>
+                            <Text style={styles.postDescription}>{post.legenda_Postagem}</Text>
                         </View>
                     </View>
                 ))}

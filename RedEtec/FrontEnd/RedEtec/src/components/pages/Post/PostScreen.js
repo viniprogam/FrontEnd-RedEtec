@@ -54,6 +54,8 @@ export default function PostScreen() {
         const formData = new FormData();
         formData.append('Legenda_Postagem', postText.trim())
         formData.append('file', file.file);
+        console.log(file.uri)
+        console.log(selectedImage)
 
         try {
             const response = await axios.post('https://localhost:44315/api/Postagem', formData, {
