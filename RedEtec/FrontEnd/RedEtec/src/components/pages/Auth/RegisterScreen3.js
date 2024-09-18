@@ -5,16 +5,16 @@ import { RadioButton } from 'react-native-paper';
 import axios from 'axios';
 
 export default function RegisterScreen3() {
-    const [email_Usuario, setEmail_Usuario] = useState('');
-    const [cidade_Usuario, setCidade_Usuario] = useState('');
-    const [cpF_Usuario, setCpF_Usuario] = useState('');
-    const [data_Nascimento_Usuario, setData_Nascimento_Usuario] = useState('');
-    const [nivel_Acesso, setNivel_Acesso] = useState(5);
-    const [sexo_Usuario, setSexo_Usuario] = useState('');
+    const [Email_Usuario, setEmail_Usuario] = useState('');
+    const [Cidade_Usuario, setCidade_Usuario] = useState('');
+    const [CPF_Usuario, setCPF_Usuario] = useState('');
+    const [Data_Nascimento_Usuario, setData_Nascimento_Usuario] = useState('');
+    const [Nivel_Acesso, setNivel_Acesso] = useState(5);
+    const [Sexo_Usuario, setSexo_Usuario] = useState('');
 
     const navigation = useNavigation();
     const route = useRoute();
-    const { nome_Usuario, senha_Usuario } = route.params;
+    const { Nome_Usuario, Senha_Usuario } = route.params;
 
     const formatDate = (date) => {
         const [day, month, year] = date.split('/');
@@ -23,16 +23,26 @@ export default function RegisterScreen3() {
 
     const handleRegister = async () => {
         try {
-            const formattedDate = formatDate(data_Nascimento_Usuario);
-            const response = await axios.post('https://localhost:7140/api/Usuarios', {
-                nome_Usuario,
-                cpF_Usuario,
-                data_Nascimento_Usuario: formattedDate,
-                cidade_Usuario,
-                email_Usuario,
-                senha_Usuario,
-                sexo_Usuario,
-                nivel_Acesso
+            const formattedDate = formatDate(Data_Nascimento_Usuario);
+            console.log({
+                Nome_Usuario,
+                CPF_Usuario,
+                Data_Nascimento_Usuario: formattedDate,
+                Cidade_Usuario,
+                Email_Usuario,
+                Senha_Usuario,
+                Sexo_Usuario,
+                Nivel_Acesso
+            });
+            const response = await axios.post('https://localhost:44315/api/Usuario', {
+                Nome_Usuario,
+                CPF_Usuario,
+                Data_Nascimento_Usuario: formattedDate,
+                Cidade_Usuario,
+                Email_Usuario,
+                Senha_Usuario,
+                Sexo_Usuario,
+                Nivel_Acesso
             });
 
             console.log('Cadastro bem-sucedido:', response.data);
@@ -55,7 +65,7 @@ export default function RegisterScreen3() {
                         style={styles.input}
                         autoCapitalize="none"
                         placeholder="Digite seu e-mail"
-                        value={email_Usuario}
+                        value={Email_Usuario}
                         onChangeText={setEmail_Usuario}
                     />
                 </View>
@@ -65,7 +75,7 @@ export default function RegisterScreen3() {
                         style={styles.input}
                         autoCapitalize="none"
                         placeholder="Digite sua cidade"
-                        value={cidade_Usuario}
+                        value={Cidade_Usuario}
                         onChangeText={setCidade_Usuario}
                     />
                 </View>
@@ -75,8 +85,8 @@ export default function RegisterScreen3() {
                         style={styles.input}
                         keyboardType="numeric"
                         placeholder="Digite seu CPF"
-                        value={cpF_Usuario}
-                        onChangeText={setCpF_Usuario}
+                        value={CPF_Usuario}
+                        onChangeText={setCPF_Usuario}
                     />
                 </View>
                 <View style={styles.inputContainer}>
@@ -85,7 +95,7 @@ export default function RegisterScreen3() {
                         style={styles.input}
                         keyboardType="numeric"
                         placeholder="DD/MM/AAAA"
-                        value={data_Nascimento_Usuario}
+                        value={Data_Nascimento_Usuario}
                         onChangeText={setData_Nascimento_Usuario}
                     />
                 </View>
@@ -98,7 +108,7 @@ export default function RegisterScreen3() {
                         >
                             <RadioButton
                                 value="M"
-                                status={sexo_Usuario === 'M' ? 'checked' : 'unchecked'}
+                                status={Sexo_Usuario === 'M' ? 'checked' : 'unchecked'}
                             />
                             <Text style={styles.radioLabel}>Masculino</Text>
                         </TouchableOpacity>
@@ -108,7 +118,7 @@ export default function RegisterScreen3() {
                         >
                             <RadioButton
                                 value="F"
-                                status={sexo_Usuario === 'F' ? 'checked' : 'unchecked'}
+                                status={Sexo_Usuario === 'F' ? 'checked' : 'unchecked'}
                             />
                             <Text style={styles.radioLabel}>Feminino</Text>
                         </TouchableOpacity>
@@ -118,7 +128,7 @@ export default function RegisterScreen3() {
                         >
                             <RadioButton
                                 value="O"
-                                status={sexo_Usuario === 'O' ? 'checked' : 'unchecked'}
+                                status={Sexo_Usuario === 'O' ? 'checked' : 'unchecked'}
                             />
                             <Text style={styles.radioLabel}>Outro</Text>
                         </TouchableOpacity>

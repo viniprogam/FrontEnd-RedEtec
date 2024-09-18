@@ -5,15 +5,15 @@ import Icon from 'react-native-vector-icons/Feather';
 import { useNavigation, useRoute } from "@react-navigation/native";
 
 export default function RegisterScreen2() {
-    const [senha_Usuario, setSenha_Usuario] = useState('');
+    const [Senha_Usuario, setSenha_Usuario] = useState('');
     const [passwordVisible, setPasswordVisible] = useState(false);
     const navigation = useNavigation();
     const route = useRoute();
-    const { nome_Usuario } = route.params; // Recebe o nome de usuário da tela anterior
+    const { Nome_Usuario } = route.params; // Recebe o nome de usuário da tela anterior
 
     const handleNext = () => {
         // Navega para a próxima tela e passa os dados coletados
-        navigation.navigate('RegisterScreen3', { nome_Usuario, senha_Usuario });
+        navigation.navigate('RegisterScreen3', { Nome_Usuario, Senha_Usuario });
     };
 
     return (
@@ -37,7 +37,7 @@ export default function RegisterScreen2() {
                             secureTextEntry={!passwordVisible}
                             autoCapitalize="none"
                             placeholder="Crie uma senha"
-                            value={senha_Usuario}
+                            value={Senha_Usuario}
                             onChangeText={setSenha_Usuario}
                         />
                         <TouchableOpacity

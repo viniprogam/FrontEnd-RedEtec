@@ -16,6 +16,7 @@ export default function PostScreen() {
     const [postText, setPostText] = useState('');
     const [selectedImage, setSelectedImage] = useState(null);
     const navigation = useNavigation();
+    const [file, setFile] = useState(null);
 
     useEffect(() => {
         (async () => {
@@ -28,37 +29,36 @@ export default function PostScreen() {
         })();
     }, []);
 
-    const pickImage = async () => {
-        const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            aspect: [4, 3],
-            quality: 1,
-        });
-
-        if (!result.canceled) {
-            setSelectedImage(result.assets[0].uri);
-        }
-    };
+    const pickFileWeb = () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.onchange = (event) => {
+          const selectedFile = event.target.files[0];
+          setFile({
+            uri: URL.createObjectURL(selectedFile),
+            name: selectedFile.name,
+            type: selectedFile.type,
+            file: selectedFile, // Adicionando o arquivo ao estado
+          });
+          Alert.alert('Arquivo Selecionado', selectedFile.name);
+        };
+        input.click(); // Simula o clique no input
+      };
 
     const handlePost = async () => {
-        if (!selectedImage) {
+        if (!file) {
             Alert.alert('Erro', 'Por favor, selecione uma imagem.');
             return;
         }
 
         const formData = new FormData();
         formData.append('postagem', JSON.stringify({
-            Texto_Postagem: postText.trim(),
+            Legenda_Postagem: postText.trim(),
         }));
-        formData.append('file', {
-            uri: selectedImage,
-            name: 'photo.jpg', // ou o nome do arquivo que você preferir
-            type: 'image/jpeg', // ajuste o tipo conforme necessário
-        });
+        formData.append('file', file.file);
 
         try {
-            const response = await axios.post('https://localhost:7140/api/Postagem', formData, {
+            const response = await axios.post('https://localhost:44315/api/Postagem', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
@@ -96,13 +96,13 @@ export default function PostScreen() {
             <ScrollView contentContainerStyle={styles.scrollViewContent}>
                 <Text style={styles.title}>Criar Novo Post</Text>
 
-                <TouchableOpacity style={styles.imagePickerButton} onPress={pickImage}>
+                <TouchableOpacity style={styles.imagePickerButton} onPress={pickFileWeb}>
                     <Text style={styles.imagePickerText}>Escolher Imagem</Text>
                 </TouchableOpacity>
 
-                {selectedImage && (
+                {file && (
                     <View style={styles.previewContainer}>
-                        <Image source={{ uri: selectedImage }} style={styles.selectedImage} />
+                        <Image source={{ uri: file.URL }} style={styles.selectedImage} />
                     </View>
                 )}
 

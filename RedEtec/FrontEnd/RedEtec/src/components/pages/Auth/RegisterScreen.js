@@ -4,12 +4,12 @@ import { View, Text, StyleSheet, TextInput, Image, TouchableOpacity } from "reac
 import { useNavigation } from "@react-navigation/native";
 
 export default function RegisterScreen() {
-    const [nome_Usuario, setNome_Usuario] = useState('');
+    const [Nome_Usuario, setNome_Usuario] = useState('');
     const navigation = useNavigation();
 
     const handleNext = () => {
         // Navega para a próxima tela e passa o nome de usuário como parâmetro
-        navigation.navigate('RegisterScreen2', { nome_Usuario });
+        navigation.navigate('RegisterScreen2', { Nome_Usuario });
     };
 
     return (
@@ -32,7 +32,7 @@ export default function RegisterScreen() {
                         style={styles.input}
                         autoCapitalize="none"
                         placeholder="Digite seu nome de usuário"
-                        value={nome_Usuario}
+                        value={Nome_Usuario}
                         onChangeText={setNome_Usuario}
                     />
                 </View>
