@@ -1,14 +1,14 @@
 // UserProfileContext.js
-import React, { createContext, useState, useContext } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 
 const UserProfileContext = createContext();
 
 export const UserProfileProvider = ({ children }) => {
     const [profile, setProfile] = useState({
-        username: 'Nome do Usuário',
-        profileImage: 'https://via.placeholder.com/150',
-        seguidores: 150,
-        seguindo: 200
+        username: '', // Inicialmente vazio, será preenchido após login
+        profileImage: '', // Imagem de perfil
+        seguidores: 0, // Exemplo de dados adicionais
+        seguindo: 0
     });
 
     return (
@@ -18,4 +18,6 @@ export const UserProfileProvider = ({ children }) => {
     );
 };
 
-export const useUserProfile = () => useContext(UserProfileContext);
+export const useUserProfile = () => {
+    return useContext(UserProfileContext);
+};

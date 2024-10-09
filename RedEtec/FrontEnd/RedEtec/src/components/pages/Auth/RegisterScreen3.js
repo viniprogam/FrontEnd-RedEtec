@@ -34,7 +34,7 @@ export default function RegisterScreen3() {
                 Sexo_Usuario,
                 Nivel_Acesso
             });
-            const response = await axios.post('https://localhost:44315/api/Usuario', {
+            const response = await axios.post('https://localhost:7140/api/Usuario', {
                 Nome_Usuario,
                 CPF_Usuario,
                 Data_Nascimento_Usuario: formattedDate,

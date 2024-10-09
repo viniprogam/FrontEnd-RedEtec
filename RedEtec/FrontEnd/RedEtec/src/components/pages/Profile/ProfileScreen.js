@@ -17,11 +17,6 @@ export default function ProfileScreen() {
     const [editModalVisible, setEditModalVisible] = useState(false);
     const [newUsername, setNewUsername] = useState(profile.username);
 
-    useEffect(() => {
-        // Simular o carregamento de dados do perfil
-        // Aqui você pode fazer uma chamada à API para obter os dados reais
-    }, []);
-
     const handleEditProfile = () => {
         setProfile(prevProfile => ({
             ...prevProfile,
@@ -136,6 +131,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     title: {
+        marginTop: 20,
         textAlign: 'center',
         fontSize: 26,
         color: colors.text,

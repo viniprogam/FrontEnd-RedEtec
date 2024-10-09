@@ -17,7 +17,7 @@ export default function HomeScreen() {
     useEffect(() => {
         const fetchPosts = async () => {
             try {
-                const response = await axios.get('https://localhost:44315/api/Postagem/postagens');
+                const response = await axios.get('https://localhost:7140/api/Postagem/postagens');
                 setPosts(response.data);
                 console.log(posts)
                 console.log(response)
@@ -64,7 +64,7 @@ export default function HomeScreen() {
                         </View>
                         <Image
                             style={styles.imgPost}
-                            source={{ uri: `https://localhost:44315/api/Postagem/imagem/${post.imageUrl}`}}
+                            source={{ uri: `https://localhost:7140/api/Postagem/imagem/${post.imageUrl}`}}
                         />
                         <View style={styles.postFooter}>
                             <Text style={styles.postDescription}>{post.legenda_Postagem}</Text>

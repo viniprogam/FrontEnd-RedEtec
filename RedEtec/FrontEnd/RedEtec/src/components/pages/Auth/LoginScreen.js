@@ -1,20 +1,22 @@
 import React, { useState } from "react";
-import { View, Text, StyleSheet, TextInput, Image, TouchableOpacity } from "react-native";
+import { View, Text, StyleSheet, TextInput, Image, TouchableOpacity, ActivityIndicator } from "react-native";
 import Icon from 'react-native-vector-icons/Feather'; // Verifique se está instalado corretamente
 import { useNavigation } from "@react-navigation/native";
 import { login } from '../../services/api.js';
+import { useUserProfile } from "../../context/UserProfileContext.js";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
 
 export default function LoginScreen() {
     const navigation = useNavigation();
     const [passwordVisible, setPasswordVisible] = useState(false);
+    const { setProfile } = useUserProfile();
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
     const handleSignIn = async () => {
-        console.log('Nome de usuário:', username); // Exibe o nome de usuário
-        console.log('Senha:', password); // Exibe a senha
         setLoading(true);
         setError('');
         try {
@@ -74,7 +76,11 @@ export default function LoginScreen() {
             </View>
 
             <TouchableOpacity style={styles.button} onPress={handleSignIn} disabled={loading}>
-                <Text style={styles.buttonText}>{loading ? 'Entrando...' : 'Entrar'}</Text>
+                {loading ? (
+                    <ActivityIndicator size="small" color="#FFF" />
+                ) : (
+                    <Text style={styles.buttonText}>Entrar</Text>
+                )}
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.signupContainer} onPress={() => navigation.navigate('RegisterScreen')}>
