@@ -17,10 +17,8 @@ export default function HomeScreen() {
     useEffect(() => {
         const fetchPosts = async () => {
             try {
-                const response = await axios.get('https://localhost:7140/api/Postagem/postagens');
+                const response = await axios.get('https://localhost:44315/api/Postagem/postagens');
                 setPosts(response.data);
-                console.log(posts)
-                console.log(response)
                 console.log(response.data)
             } catch (error) {
                 console.error("Erro ao buscar postagens:", error);
@@ -60,11 +58,11 @@ export default function HomeScreen() {
                                 style={styles.userAvatar}
                                 source={require('../../../../assets/perfil.png')} // Exibe a imagem ou um placeholder
                             />
-                            <Text style={styles.userName}>{post.Id_Usuario}</Text>
+                            <Text style={styles.userName}>{post.Nome_Usuario}</Text>
                         </View>
                         <Image
                             style={styles.imgPost}
-                            source={{ uri: `https://localhost:7140/api/Postagem/imagem/${post.imageUrl}`}}
+                            source={{ uri: `https://localhost:44315/api/Postagem/imagem/${post.imageUrl}`}}
                         />
                         <View style={styles.postFooter}>
                             <Text style={styles.postDescription}>{post.legenda_Postagem}</Text>

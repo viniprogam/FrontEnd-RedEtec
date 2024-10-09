@@ -35,8 +35,35 @@ export default function PrivateChatScreen({ route, navigation }) {
     const [error, setError] = useState('');
     const flatListRef = useRef(null);
 
+    const fetchMessages = async () => {
+        try {
+            const token = await AsyncStorage.getItem('token');
+            if (!token) {
+                throw new Error('Token não encontrado. Por favor, faça login novamente.');
+            }
 
-    // Removido: Função fetchMessages e useEffect correspondente
+            const response = await axios.get(`https://localhost:44315/api/chat/${userId}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+
+            if (response.status === 200) {
+                setMessages(response.data);
+                console.log("Mensagens recebidas:", response.data);
+            } else {
+                console.error("Erro ao buscar mensagens:", response.status, response.statusText);
+            }
+        } catch (error) {
+            console.error("Erro ao buscar mensagens:", error.message || error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchMessages();
+    }, [userId]);
 
     // Função para enviar uma nova mensagem
     const handleSendMessage = async () => {
@@ -49,33 +76,30 @@ export default function PrivateChatScreen({ route, navigation }) {
                     throw new Error('Token não encontrado. Por favor, faça login novamente.');
                 }
 
-            
-
-                // Ajuste a URL conforme seu ambiente
                 const API_URL = Platform.OS === 'android' 
                     ? 'http://10.0.2.2:7140/api/chat/messages'
-                    : 'http://localhost:7140/api/chat/messages';
+                    : 'https://localhost:44315/api/Chat/enviarmensagem';
 
                 // Enviar a mensagem para a API
                 const response = await axios.post(API_URL, {
-                    senderId: token,
-                    receiverId: userId,
-                    text: message.trim()
+                    receptorId: userId,
+                    mensagem: message.trim()
                 }, {
                     headers: {
                         Authorization: `Bearer ${token}`
                     }
                 });
 
-                // Atualizar a lista de mensagens com a nova mensagem
-                setMessages([...messages, response.data]);
+                // Após enviar, buscar as mensagens novamente
+                await fetchMessages();
+
+                // Limpar a entrada de mensagem
                 setMessage('');
 
                 // Scroll automático para a última mensagem
                 setTimeout(() => {
                     flatListRef.current.scrollToEnd({ animated: true });
                 }, 100);
-
             } catch (err) {
                 console.error('Erro ao enviar mensagem:', err);
                 Alert.alert('Erro', 'Não foi possível enviar a mensagem. Tente novamente.');
@@ -87,12 +111,13 @@ export default function PrivateChatScreen({ route, navigation }) {
 
     // Renderização de cada mensagem
     const renderItem = ({ item }) => {
-        const isUser = item.senderId === userId; // Verifica se a mensagem foi enviada pelo outro usuário
+        const isUser = item.Id_Usuario_Receptor !== userId; // Verifica se a mensagem foi enviada pelo outro usuário
+        console.log(isUser)
 
         return (
             <View style={[styles.messageContainer, isUser ? styles.otherMessage : styles.userMessage]}>
                 <Text style={isUser ? styles.otherText : styles.userText}>
-                    {item.text}
+                    {item.Mensagem}
                 </Text>
             </View>
         );
@@ -120,7 +145,7 @@ export default function PrivateChatScreen({ route, navigation }) {
             <FlatList
                 ref={flatListRef}
                 data={messages}
-                keyExtractor={(item) => item.id.toString()}
+                keyExtractor={(item) => item.Id_Mensagem_Privada}
                 renderItem={renderItem}
                 contentContainerStyle={styles.messagesList}
                 onContentSizeChange={() => flatListRef.current.scrollToEnd({ animated: true })}

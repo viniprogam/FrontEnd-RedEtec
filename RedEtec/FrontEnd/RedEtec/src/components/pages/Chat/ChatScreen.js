@@ -60,7 +60,7 @@ export default function ChatScreen() {
             }
             console.log('Token:', token);
 
-            const response = await axios.get('https://localhost:7140/api/usuario/getcontatos', {
+            const response = await axios.get('https://localhost:44315/api/usuario/getcontatos', {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -100,8 +100,8 @@ export default function ChatScreen() {
 
         // Navega para PrivateChatScreen passando userId e userName
         navigation.navigate('PrivateChatScreen', { 
-            userId: conversation.id_Usuario, 
-            userName: conversation.nome_Usuario 
+            userId: conversation.Id_Usuario, 
+            userName: conversation.Nome_Usuario 
         });
     };
 
@@ -119,7 +119,7 @@ export default function ChatScreen() {
                 source={require('../../../../assets/perfil.png')} 
                 style={styles.avatar} 
             />
-            <Text style={styles.itemText}>{item.nome_Usuario}</Text>
+            <Text style={styles.itemText}>{item.Nome_Usuario}</Text>
         </TouchableOpacity>
     );
 
@@ -164,7 +164,7 @@ export default function ChatScreen() {
 
             <FlatList
                 data={filteredConversations}
-                keyExtractor={(item) => item.id_Usuario.toString()}
+                keyExtractor={(item) => item.Id_Usuario.toString()}
                 renderItem={renderItem}
                 ListEmptyComponent={
                     <View style={styles.emptyContainer}>

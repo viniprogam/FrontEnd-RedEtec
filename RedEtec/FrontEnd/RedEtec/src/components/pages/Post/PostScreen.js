@@ -58,7 +58,7 @@ export default function PostScreen() {
         console.log(selectedImage)
 
         try {
-            const response = await axios.post('https://localhost:7140/api/Postagem', formData, {
+            const response = await axios.post('https://localhost:44315/api/Postagem', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
