@@ -1,5 +1,3 @@
-// src/pages/Chat/ChatScreen.js
-
 import React, { useState, useEffect } from 'react';
 import { 
     View, 
@@ -8,7 +6,6 @@ import {
     FlatList, 
     TouchableOpacity, 
     Image, 
-    TextInput, 
     ActivityIndicator, 
     RefreshControl 
 } from 'react-native';
@@ -26,29 +23,14 @@ const colors = {
 
 export default function ChatScreen() {
     const navigation = useNavigation();
-    const [searchText, setSearchText] = useState('');
     const [conversations, setConversations] = useState([]);
-    const [filteredConversations, setFilteredConversations] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [refreshing, setRefreshing] = useState(false);
-    const [selectedUserIds, setSelectedUserIds] = useState([]);
-
-    // Novas variáveis de estado para usuário selecionado
-    const [selectedUserId, setSelectedUserId] = useState(null);
-    const [selectedUserName, setSelectedUserName] = useState('');
 
     useEffect(() => {
         fetchConversations();
     }, []);
-
-    useEffect(() => {
-        filterConversations();
-    }, [searchText, conversations]);
-
-    useEffect(() => {
-        console.log('IDs Selecionados:', selectedUserIds);
-    }, [selectedUserIds]);
 
     const fetchConversations = async () => {
         setLoading(true);
@@ -58,49 +40,29 @@ export default function ChatScreen() {
             if (!token) {
                 throw new Error('Token não encontrado. Por favor, faça login novamente.');
             }
-            console.log('Token:', token);
 
-            const response = await axios.get('https://localhost:44315/api/usuario/getcontatos', {
+            const response = await axios.get('https://localhost:7140/api/Usuario/getcontatos', {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
             });
-            console.log('Resposta da API:', response.data);
 
-            setConversations(response.data);
+            console.log("Conversations fetched:", response.data); // Verifique os dados recebidos
+            
+            // Ajuste para acessar o array de conversas
+            setConversations(response.data.$values || []); 
         } catch (err) {
             console.error('Erro ao buscar conversas:', err);
-            setError('Erro ao buscar conversas. Tente novamente mais tarde.');
+            setError(err.message || 'Erro ao buscar conversas. Tente novamente mais tarde.');
         } finally {
             setLoading(false);
             setRefreshing(false);
         }
     };
 
-    const filterConversations = () => {
-        if (searchText.trim() === '') {
-            setFilteredConversations(conversations);
-        } else {
-            const filtered = conversations.filter(conversation =>
-                conversation.nome_Usuario.toLowerCase().includes(searchText.toLowerCase())
-            );
-            setFilteredConversations(filtered);
-        }
-    };
-
     const handleSelectConversation = (conversation) => {
-        // Verifica se o ID já está no array para evitar duplicatas
-        if (!selectedUserIds.includes(conversation.id_Usuario)) {
-            setSelectedUserIds([...selectedUserIds, conversation.id_Usuario]);
-        }
-
-        // Define as variáveis de estado para o usuário selecionado
-        setSelectedUserId(conversation.id_Usuario);
-        setSelectedUserName(conversation.nome_Usuario);
-
-        // Navega para PrivateChatScreen passando userId e userName
         navigation.navigate('PrivateChatScreen', { 
-            userId: conversation.Id_Usuario, 
+            userId: conversation.Id_Usuario,  
             userName: conversation.Nome_Usuario 
         });
     };
@@ -110,18 +72,25 @@ export default function ChatScreen() {
         fetchConversations();
     };
 
-    const renderItem = ({ item }) => (
-        <TouchableOpacity
-            style={styles.item}
-            onPress={() => handleSelectConversation(item)}
-        >
-            <Image 
-                source={require('../../../../assets/perfil.png')} 
-                style={styles.avatar} 
-            />
-            <Text style={styles.itemText}>{item.Nome_Usuario}</Text>
-        </TouchableOpacity>
-    );
+    const renderItem = ({ item }) => {
+        console.log("Rendering item:", item); // Adicione este log para ver o conteúdo do item
+
+        return (
+            <TouchableOpacity
+                style={styles.item}
+                onPress={() => handleSelectConversation(item)}
+                activeOpacity={0.7} // Adiciona feedback visual ao toque
+            >
+                <Image 
+                    source={require('../../../../assets/perfil.png')} 
+                    style={styles.avatar} 
+                />
+                <View style={styles.itemDetails}>
+                    <Text style={styles.itemText}>{item.Nome_Usuario || 'Usuário desconhecido'}</Text>
+                </View>
+            </TouchableOpacity>
+        );
+    };
 
     if (loading) {
         return (
@@ -146,16 +115,6 @@ export default function ChatScreen() {
                 </View>
             </View>
 
-            <View style={styles.searchContainer}>
-                <TextInput
-                    style={styles.searchInput}
-                    placeholder="Pesquisar conversas..."
-                    placeholderTextColor="#8A8F9E"
-                    value={searchText}
-                    onChangeText={setSearchText}
-                />
-            </View>
-
             {error ? (
                 <View style={styles.errorContainer}>
                     <Text style={styles.errorText}>{error}</Text>
@@ -163,8 +122,8 @@ export default function ChatScreen() {
             ) : null}
 
             <FlatList
-                data={filteredConversations}
-                keyExtractor={(item) => item.Id_Usuario.toString()}
+                data={conversations} 
+                keyExtractor={(item) => item.id_Usuario ? item.id_Usuario.toString() : Math.random().toString()} 
                 renderItem={renderItem}
                 ListEmptyComponent={
                     <View style={styles.emptyContainer}>
@@ -174,7 +133,7 @@ export default function ChatScreen() {
                 refreshControl={
                     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
                 }
-                contentContainerStyle={filteredConversations.length === 0 ? styles.flatListEmpty : null}
+                contentContainerStyle={conversations.length === 0 ? styles.flatListEmpty : null}
             />
         </View>
     );
@@ -186,88 +145,68 @@ const styles = StyleSheet.create({
         backgroundColor: colors.background,
     },
     headerContainer: {
-        height: 110,
-        backgroundColor: colors.secondary,
-        justifyContent: 'center',
+        flexDirection: 'row',
         alignItems: 'center',
+        backgroundColor: colors.secondary,
+        padding: 10,
     },
     logoContainer: {
-        position: 'absolute',
-        top: 40,
-        left: 20,
+        flex: 1,
     },
     logo: {
-        width: 50,
-        height: 50,
+        height: 40,
+        width: 40,
     },
     titleContainer: {
+        flex: 2,
         alignItems: 'center',
-        justifyContent: 'center',
     },
     title: {
-        marginTop: 20,
-        textAlign: 'center',
-        fontSize: 26,
+        fontSize: 20,
         color: colors.text,
-        fontWeight: '700',
-        fontFamily: 'Noto Serif',
-    },
-    searchContainer: {
-        paddingHorizontal: 15,
-        paddingVertical: 10,
-        backgroundColor: '#F4F4F4',
-    },
-    searchInput: {
-        backgroundColor: '#FFFFFF',
-        padding: 10,
-        borderRadius: 10,
-        borderColor: colors.border,
-        borderWidth: 1,
-        fontSize: 16,
-        color: colors.primary,
+        fontWeight: 'bold',
     },
     item: {
-        padding: 15,
-        borderBottomWidth: 1,
-        borderBottomColor: '#ccc',
         flexDirection: 'row',
+        padding: 15,
+        borderBottomColor: colors.border,
+        borderBottomWidth: 1,
         alignItems: 'center',
     },
     avatar: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
+        width: 50,
+        height: 50,
+        borderRadius: 25,
         marginRight: 15,
     },
+    itemDetails: {
+        flex: 1,
+    },
     itemText: {
-        fontSize: 18,
-        color: colors.primary,
-    },
-    emptyContainer: {
-        padding: 20,
-        alignItems: 'center',
-    },
-    emptyText: {
-        fontSize: 18,
-        color: '#8A8F9E',
+        fontSize: 16,
+        color: colors.primary
     },
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: colors.background,
     },
     errorContainer: {
-        paddingHorizontal: 15,
-        paddingVertical: 10,
+        padding: 15,
+        backgroundColor: colors.primary,
     },
     errorText: {
-        color: 'red',
+        color: colors.text,
         textAlign: 'center',
     },
-    flatListEmpty: {
-        flexGrow: 1,
+    emptyContainer: {
+        flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    emptyText: {
+        color: colors.text,
+        fontSize: 16,
+        textAlign: 'center',
     },
 });

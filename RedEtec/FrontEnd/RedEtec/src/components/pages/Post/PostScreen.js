@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image, Alert, Scro
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const colors = {
     primary: '#040915',
@@ -13,6 +14,7 @@ const colors = {
 };
 
 export default function PostScreen() {
+
     const [postText, setPostText] = useState('');
     const [selectedImage, setSelectedImage] = useState(null);
     const navigation = useNavigation();
@@ -33,17 +35,17 @@ export default function PostScreen() {
         const input = document.createElement('input');
         input.type = 'file';
         input.onchange = (event) => {
-          const selectedFile = event.target.files[0];
-          setFile({
+            const selectedFile = event.target.files[0];
+            setFile({
             uri: URL.createObjectURL(selectedFile),
             name: selectedFile.name,
             type: selectedFile.type,
             file: selectedFile, // Adicionando o arquivo ao estado
-          });
-          Alert.alert('Arquivo Selecionado', selectedFile.name);
+        });
+        Alert.alert('Arquivo Selecionado', selectedFile.name);
         };
         input.click(); // Simula o clique no input
-      };
+    };
 
     const handlePost = async () => {
         if (!file) {
@@ -58,9 +60,16 @@ export default function PostScreen() {
         console.log(selectedImage)
 
         try {
-            const response = await axios.post('https://localhost:44315/api/Postagem', formData, {
+            const token = await AsyncStorage.getItem("token");
+            if (!token) {
+                Alert.alert('Erro', 'Token de autenticação não encontrado.');
+                return;
+            }
+
+            const response = await axios.post('https://localhost:7140/api/Postagem', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
+                    'Authorization': `Bearer ${token}`
                 },
             });
 

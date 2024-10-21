@@ -1,277 +1,280 @@
-// src/pages/Chat/PrivateChatScreen.js
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-    View, 
-    Text, 
-    StyleSheet, 
-    TextInput, 
-    TouchableOpacity, 
-    FlatList, 
-    Image, 
-    ActivityIndicator, 
-    KeyboardAvoidingView, 
-    Platform, 
-    Alert 
+	View, 
+	Text, 
+	StyleSheet, 
+	TextInput, 
+	TouchableOpacity, 
+	FlatList, 
+	Image, 
+	ActivityIndicator, 
+	KeyboardAvoidingView, 
+	Platform, 
+	Alert 
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import moment from 'moment';
 
 const colors = {
-    primary: '#040915',
-    secondary: '#1E2A38',
-    background: '#F4F4F4',
-    text: '#FFFFFF',
-    border: '#8A8F9E',
-    messageUser: '#d1ffd1',
-    messageOther: '#f1f1f1',
+	primary: '#040915',
+	secondary: '#1E2A38',
+	background: '#F4F4F4',
+	text: '#FFFFFF',
+	border: '#8A8F9E',
+	messageUser: '#d1ffd1',
+	messageOther: '#f1f1f1',
 };
 
 export default function PrivateChatScreen({ route, navigation }) {
-    const { userId, userName } = route.params; // Recebe os parâmetros passados
-    const [message, setMessage] = useState('');
-    const [messages, setMessages] = useState([]); // Inicializa como vazio
-    const [loading, setLoading] = useState(false); // Inicializa como falso
-    const [error, setError] = useState('');
-    const flatListRef = useRef(null);
+	const { userId, userName, userPhoto } = route.params;
+	const [message, setMessage] = useState('');
+	const [messages, setMessages] = useState([]);
+	const [loading, setLoading] = useState(true);
+	const flatListRef = useRef(null);
+	const fetchIntervalRef = useRef(null);
 
-    const fetchMessages = async () => {
-        try {
-            const token = await AsyncStorage.getItem('token');
-            if (!token) {
-                throw new Error('Token não encontrado. Por favor, faça login novamente.');
-            }
+	const fetchMessages = async () => {
+		try {
+			const token = await AsyncStorage.getItem('token');
+			if (!token) {
+				throw new Error('Token não encontrado. Por favor, faça login novamente.');
+			}
 
-            const response = await axios.get(`https://localhost:44315/api/chat/${userId}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            });
+			const response = await axios.get(`https://localhost:7140/api/Chat/${userId}`, {
+				headers: {
+					Authorization: `Bearer ${token}`
+				}
+			});
 
-            if (response.status === 200) {
-                setMessages(response.data);
-                console.log("Mensagens recebidas:", response.data);
-            } else {
-                console.error("Erro ao buscar mensagens:", response.status, response.statusText);
-            }
-        } catch (error) {
-            console.error("Erro ao buscar mensagens:", error.message || error);
-        } finally {
-            setLoading(false);
-        }
-    };
+			if (response.status === 200) {
+				if (Array.isArray(response.data.$values)) {
+					const fetchedMessages = response.data.$values.map(msg => ({
+						EmissorId: msg.EmissorId,
+						ReceptorId: msg.ReceptorId,
+						Mensagem: msg.Mensagem,
+						LocalizacaoMidia: msg.LocalizacaoMidia,
+						Timestamp: new Date(msg.Data_Mensagem),
+						isSent: msg.EmissorId === userId
+					}));
 
-    useEffect(() => {
-        fetchMessages();
-    }, [userId]);
+					// Atualiza o estado com as mensagens mais recentes
+					setMessages(fetchedMessages.sort((a, b) => a.Timestamp - b.Timestamp));
+				} else {
+					Alert.alert('Erro', 'Formato inesperado de dados retornado da API.');
+				}
+			} else {
+				throw new Error(`Erro ao buscar mensagens: ${response.status} - ${response.data}`);
+			}
+		} catch (error) {
+			handleError(error);
+		} finally {
+			setLoading(false);
+		}
+	};
 
-    // Função para enviar uma nova mensagem
-    const handleSendMessage = async () => {
-        if (message.trim()) {
-            try {
-                setLoading(true); // Opcional: Mostrar indicador de envio
+	const handleError = (error) => {
+		if (error.response) {
+			Alert.alert('Erro', error.response.data.message || 'Erro desconhecido no servidor.');
+		} else {
+			Alert.alert('Erro', error.message || 'Erro ao buscar mensagens.');
+		}
+	};
 
-                const token = await AsyncStorage.getItem('token');
-                if (!token) {
-                    throw new Error('Token não encontrado. Por favor, faça login novamente.');
-                }
+	useEffect(() => {
+		fetchMessages();
+		fetchIntervalRef.current = setInterval(fetchMessages, 10000);
 
-                const API_URL = Platform.OS === 'android' 
-                    ? 'http://10.0.2.2:7140/api/chat/messages'
-                    : 'https://localhost:44315/api/Chat/enviarmensagem';
+		return () => {
+			clearInterval(fetchIntervalRef.current);
+		};
+	}, [userId]);
 
-                // Enviar a mensagem para a API
-                const response = await axios.post(API_URL, {
-                    receptorId: userId,
-                    mensagem: message.trim()
-                }, {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                });
+	const handleSendMessage = async () => {
+		if (message.trim()) {
+			try {
+				setLoading(true);
+				const token = await AsyncStorage.getItem('token');
+				if (!token) {
+					throw new Error('Token não encontrado. Por favor, faça login novamente.');
+				}
 
-                // Após enviar, buscar as mensagens novamente
-                await fetchMessages();
+				const response = await axios.post(
+					'https://localhost:7140/api/Chat/enviarmensagem',
+					{
+						ReceptorId: userId,
+						Mensagem: message.trim(),
+					},
+					{
+						headers: {
+							Authorization: `Bearer ${token}`,
+							'Content-Type': 'application/json',
+						},
+					}
+				);
 
-                // Limpar a entrada de mensagem
-                setMessage('');
+				if (response.status === 200) {
+					const newMessage = {
+						Mensagem: message.trim(),
+						ReceptorId: userId,
+						LocalizacaoMidia: null,
+						Timestamp: new Date(),
+						isSent: true
+					};
+					setMessages(prevMessages => [...prevMessages, newMessage]);
+					setMessage('');
+					flatListRef.current.scrollToEnd({ animated: true });
+				} else {
+					throw new Error('Não foi possível enviar a mensagem. Tente novamente.');
+				}
+			} catch (err) {
+				Alert.alert('Erro', err.message || 'Não foi possível enviar a mensagem. Tente novamente.');
+			} finally {
+				setLoading(false);
+			}
+		} else {
+			Alert.alert('Mensagem vazia', 'Por favor, digite uma mensagem antes de enviar.');
+		}
+	};
 
-                // Scroll automático para a última mensagem
-                setTimeout(() => {
-                    flatListRef.current.scrollToEnd({ animated: true });
-                }, 100);
-            } catch (err) {
-                console.error('Erro ao enviar mensagem:', err);
-                Alert.alert('Erro', 'Não foi possível enviar a mensagem. Tente novamente.');
-            } finally {
-                setLoading(false); // Ocultar indicador de envio
-            }
-        }
-    };
+	const renderItem = ({ item }) => {
+		return (
+			<View style={[styles.messageContainer, item.isSent ? styles.userMessage : styles.otherMessage]}>
+				{item.LocalizacaoMidia ? (
+					<Image 
+						source={{ uri: item.LocalizacaoMidia }}
+						style={styles.messageImage}
+					/>
+				) : null}
+				<Text style={item.isSent ? styles.userText : styles.otherText}>
+					{item.Mensagem}
+				</Text>
+				<Text style={styles.timestamp}>
+					{moment(item.Timestamp).format('LT')}
+				</Text>
+			</View>
+		);
+	};
 
-    // Renderização de cada mensagem
-    const renderItem = ({ item }) => {
-        const isUser = item.Id_Usuario_Receptor !== userId; // Verifica se a mensagem foi enviada pelo outro usuário
-        console.log(isUser)
+	const keyExtractor = (item) => {
+		return item.Timestamp instanceof Date && !isNaN(item.Timestamp.getTime()) 
+			? item.Timestamp.toISOString() 
+			: String(Math.random());
+	};
 
-        return (
-            <View style={[styles.messageContainer, isUser ? styles.otherMessage : styles.userMessage]}>
-                <Text style={isUser ? styles.otherText : styles.userText}>
-                    {item.Mensagem}
-                </Text>
-            </View>
-        );
-    };
+	if (loading) {
+		return <ActivityIndicator size="large" color={colors.primary} />;
+	}
 
-    return (
-        <KeyboardAvoidingView 
-            style={styles.container} 
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-            keyboardVerticalOffset={90}
-        >
-            {/* Cabeçalho */}
-            <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-                    <Ionicons name="arrow-back" size={24} color={colors.text} />
-                </TouchableOpacity>
-                <Image 
-                    source={require('../../../../assets/perfil.png')} // Imagem de perfil padrão
-                    style={styles.avatarHeader} 
-                />
-                <Text style={styles.nameUser}>{userName}</Text>
-            </View>
-
-            {/* Lista de Mensagens */}
-            <FlatList
-                ref={flatListRef}
-                data={messages}
-                keyExtractor={(item) => item.Id_Mensagem_Privada}
-                renderItem={renderItem}
-                contentContainerStyle={styles.messagesList}
-                onContentSizeChange={() => flatListRef.current.scrollToEnd({ animated: true })}
-                onLayout={() => flatListRef.current.scrollToEnd({ animated: true })}
-                ListEmptyComponent={
-                    <View style={styles.emptyContainer}>
-                        <Text style={styles.emptyText}>Inicie a conversa enviando uma mensagem.</Text>
-                    </View>
-                }
-            />
-
-            {/* Input de Mensagem */}
-            <View style={styles.inputContainer}>
-                <TextInput
-                    style={styles.input}
-                    value={message}
-                    onChangeText={setMessage}
-                    placeholder="Digite uma mensagem"
-                    placeholderTextColor="#8A8F9E"
-                />
-                <TouchableOpacity style={styles.sendButton} onPress={handleSendMessage}>
-                    <Ionicons name="send" size={24} color={colors.primary} />
-                </TouchableOpacity>
-            </View>
-
-            {/* Indicador de Envio */}
-            {loading && (
-                <View style={styles.loadingOverlay}>
-                    <ActivityIndicator size="large" color={colors.primary} />
-                </View>
-            )}
-        </KeyboardAvoidingView>
-    );
+	return (
+		<KeyboardAvoidingView
+			behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+			style={styles.container}
+		>
+			{/* Cabeçalho com foto de perfil e nome do usuário */}
+			<View style={styles.header}>
+				<TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+					<Ionicons name="arrow-back" size={24} color={colors.text} />
+				</TouchableOpacity>
+				<Image source={require('../../../../assets/perfil.png')} style={styles.profileImage} />
+				<Text style={styles.headerText}>{userName}</Text>
+			</View>
+			
+			<FlatList
+				data={messages}
+				renderItem={renderItem}
+				keyExtractor={keyExtractor}
+				ref={flatListRef}
+				contentContainerStyle={{ paddingBottom: 20 }}
+                onEndReachedThreshold={0}
+			/>
+			<View style={styles.inputContainer}>
+				<TextInput
+					style={styles.input}
+					value={message}
+					onChangeText={setMessage}
+					placeholder="Digite sua mensagem..."
+					placeholderTextColor={colors.border}
+				/>
+				<TouchableOpacity onPress={handleSendMessage}>
+					<Ionicons name="send" size={24} color={colors.primary} />
+				</TouchableOpacity>
+			</View>
+		</KeyboardAvoidingView>
+	);
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: colors.background,
-    },
-    header: {
-        height: 60,
-        backgroundColor: colors.secondary,
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 10,
-    },
-    backButton: {
-        marginRight: 10,
-    },
-    avatarHeader: {
-        width: 40,
-        height: 40,
-        borderRadius: 20,
-    },
-    nameUser: {
-        marginLeft: 10,
-        fontSize: 18,
-        color: colors.text,
-        fontWeight: '700',
-    },
-    messagesList: {
-        paddingHorizontal: 10,
-        paddingVertical: 5,
-    },
-    messageContainer: {
-        padding: 10,
-        borderRadius: 10,
-        marginVertical: 5,
-        maxWidth: '80%',
-    },
-    userMessage: {
-        backgroundColor: colors.messageUser,
-        alignSelf: 'flex-end',
-    },
-    otherMessage: {
-        backgroundColor: colors.messageOther,
-        alignSelf: 'flex-start',
-    },
-    userText: {
-        color: colors.primary,
-    },
-    otherText: {
-        color: '#000',
-    },
-    inputContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 10,
-        borderTopColor: colors.border,
-        borderTopWidth: 0.5,
-        backgroundColor: '#fff',
-    },
-    input: {
-        flex: 1,
-        height: 40,
-        borderColor: colors.border,
-        borderWidth: 1,
-        borderRadius: 20,
-        paddingHorizontal: 15,
-        fontSize: 16,
-        color: colors.primary,
-    },
-    sendButton: {
-        marginLeft: 10,
-        padding: 10,
-        borderRadius: 20,
-    },
-    loadingOverlay: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0,0,0,0.3)',
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    emptyContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginTop: 50,
-    },
-    emptyText: {
-        fontSize: 16,
-        color: '#8A8F9E',
-    },
+	container: {
+		flex: 1,
+		backgroundColor: colors.background,
+		padding: 10,
+	},
+	header: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		marginBottom: 10,
+		padding: 10,
+		backgroundColor: colors.secondary,
+		borderRadius: 10,
+	},
+	profileImage: {
+		width: 40,
+		height: 40,
+		borderRadius: 20,
+		marginRight: 10,
+	},
+	headerText: {
+		color: colors.text,
+		fontSize: 18,
+	},
+	messageContainer: {
+		marginVertical: 5,
+		padding: 10,
+		borderRadius: 10,
+	},
+	userMessage: {
+		backgroundColor: '#3e3e',
+		alignSelf: 'flex-start',
+	},
+	otherMessage: {
+		backgroundColor: colors.messageOther,
+		alignSelf: 'flex-end',
+	},
+	messageImage: {
+		width: 200,
+		height: 200,
+		borderRadius: 10,
+		marginBottom: 5,
+	},
+	userText: {
+		color: colors.primary,
+	},
+	otherText: {
+		color: colors.secondary,
+	},
+	timestamp: {
+		fontSize: 10,
+		color: colors.border,
+		alignSelf: 'flex-end',
+	},
+	inputContainer: {
+		flexDirection: 'row',
+		alignItems: 'center',
+		backgroundColor: colors.secondary,
+		borderRadius: 10,
+		padding: 10,
+	},
+	input: {
+		flex: 1,
+		backgroundColor: '#fff',
+		borderRadius: 10,
+		padding: 10,
+		marginRight: 10,
+	},
+	backButton: {
+		marginRight: 10,
+	},
 });
+

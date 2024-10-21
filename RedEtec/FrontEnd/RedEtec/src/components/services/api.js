@@ -2,12 +2,12 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const api = axios.create({
-  baseURL: 'https://localhost:44315/api'
+  baseURL: 'https://localhost:7140/api'
 })
 
 export const login = async (username, password) => {
   try {
-    const data = await axios.post('https://localhost:44315/api/Usuario/login', {
+    const data = await axios.post('https://localhost:7140/api/Usuario/login', {
       username,
       password,
     });

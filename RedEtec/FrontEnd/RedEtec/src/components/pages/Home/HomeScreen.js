@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { View, Text, StyleSheet, Image, ScrollView, ActivityIndicator } from "react-native";
-import axios from 'axios'; // Certifique-se de ter o axios instalado
+import axios from 'axios';
+import { useFocusEffect } from '@react-navigation/native';
 
 const colors = {
     primary: '#040915',
@@ -14,25 +15,35 @@ export default function HomeScreen() {
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const fetchPosts = async () => {
-            try {
-                const response = await axios.get('https://localhost:44315/api/Postagem/postagens');
-                setPosts(response.data);
-                console.log(response.data)
-            } catch (error) {
-                console.error("Erro ao buscar postagens:", error);
-            } finally {
-                setLoading(false);
+    const fetchPosts = async () => {
+        setLoading(true);
+        try {
+            const response = await axios.get('https://localhost:7140/api/Postagem/postagens');
+            if (response.data && Array.isArray(response.data.$values)) {
+                setPosts(response.data.$values);
+            } else {
+                console.error("Data is not an array:", response.data);
             }
-        };
+            console.log(response.data);
+        } catch (error) {
+            console.error("Erro ao buscar postagens:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-        fetchPosts();
-    }, []);
-
+    useFocusEffect(
+        useCallback(() => {
+            fetchPosts();
+        }, [])
+    );
 
     if (loading) {
-        return <ActivityIndicator size="large" color={colors.primary} />;
+        return (
+            <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color={colors.primary} />
+            </View>
+        );
     }
 
     return (
@@ -62,10 +73,10 @@ export default function HomeScreen() {
                         </View>
                         <Image
                             style={styles.imgPost}
-                            source={{ uri: `https://localhost:44315/api/Postagem/imagem/${post.imageUrl}`}}
+                            source={{ uri: `https://localhost:7140/api/Postagem/imagem/${post.imageUrl}`}}
                         />
                         <View style={styles.postFooter}>
-                            <Text style={styles.postDescription}>{post.legenda_Postagem}</Text>
+                            <Text style={styles.postDescription}>{post.Legenda_Postagem}</Text>
                         </View>
                     </View>
                 ))}
@@ -87,7 +98,7 @@ const styles = StyleSheet.create({
     },
     logoContainer: {
         position: 'absolute',
-        top:40,
+        top: 40,
         left: 20,
     },
     logo: {
@@ -116,7 +127,7 @@ const styles = StyleSheet.create({
         borderColor: colors.border,
         borderWidth: 1,
         marginVertical: 10,
-        marginHorizontal: 5
+        marginHorizontal: 5,
     },
     postHeader: {
         flexDirection: 'row',
@@ -138,7 +149,7 @@ const styles = StyleSheet.create({
     imgPost: {
         width: '100%',
         height: 400,
-        backgroundColor: colors.border
+        backgroundColor: colors.border,
     },
     postFooter: {
         padding: 10,
@@ -146,5 +157,10 @@ const styles = StyleSheet.create({
     postDescription: {
         fontSize: 14,
         color: colors.primary,
-    }
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
 });
