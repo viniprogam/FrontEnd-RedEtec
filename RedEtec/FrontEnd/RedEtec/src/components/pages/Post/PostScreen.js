@@ -42,7 +42,7 @@ export default function PostScreen() {
             type: selectedFile.type,
             file: selectedFile, // Adicionando o arquivo ao estado
         });
-        Alert.alert('Arquivo Selecionado', selectedFile.name);
+        // Alert.alert('Arquivo Selecionado', selectedFile.name);
         };
         input.click(); // Simula o clique no input
     };
@@ -86,6 +86,7 @@ export default function PostScreen() {
             Alert.alert('Erro', 'Houve um problema ao criar a postagem.');
         }
     };
+    
 
     return (
         <View style={styles.container}>
@@ -98,7 +99,7 @@ export default function PostScreen() {
                     />
                 </View>
                 <View style={styles.titleContainer}>
-                    <Text style={styles.titleLogo}>RedEtec</Text>
+                    <Text style={styles.title}>RedEtec</Text>
                 </View>
             </View>
 
@@ -153,7 +154,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
     },
-    titleLogo: {
+    title: {
+        marginTop: 20,
         textAlign: 'center',
         fontSize: 26,
         color: colors.text,
@@ -164,13 +166,6 @@ const styles = StyleSheet.create({
         flexGrow: 1,
         backgroundColor: colors.background,
         padding: 10,
-    },
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: colors.primary,
-        marginBottom: 20,
-        textAlign: 'center',
     },
     textInput: {
         borderColor: colors.border,

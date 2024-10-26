@@ -16,7 +16,7 @@ export const login = async (username, password) => {
 
     const token = await AsyncStorage.getItem("token");
 
-    console.log("token: ", token)
+    // console.log("token: ", token)
   } catch (error) {
     if (error.data) {
       // Erros relacionados à resposta da API

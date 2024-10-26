@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { View, Text, StyleSheet, Image, ScrollView, ActivityIndicator } from "react-native";
+import { View, Text, StyleSheet, Image, ScrollView, ActivityIndicator, Alert, TouchableOpacity } from "react-native";
 import axios from 'axios';
 import { useFocusEffect } from '@react-navigation/native';
+import Feather from 'react-native-vector-icons/Feather';
 
 const colors = {
     primary: '#040915',
@@ -15,10 +16,17 @@ export default function HomeScreen() {
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
 
+    const nivelDeAcesso = 'comum';
+    const userId = 2;
+
+
+    /*FUNÇÃO PARA CARREGAR OS POST */
     const fetchPosts = async () => {
         setLoading(true);
         try {
-            const response = await axios.get('https://localhost:7140/api/Postagem/postagens');
+            const response = await axios.get('https://localhost:7140/api/Postagem/postagens', {
+                timeout: 10000000
+            });
             if (response.data && Array.isArray(response.data.$values)) {
                 setPosts(response.data.$values);
             } else {
@@ -32,12 +40,26 @@ export default function HomeScreen() {
         }
     };
 
+    /*FUNÇÃO PARA DELETAR POSTS*/
+    const handlerDeletePost = async (postId) => {
+        try {
+            await axios.delete(`https://localhost:7140/api/Postagem/${postId}`)
+            fetchPosts();
+            Alert.alert("Postagem deletada com sucesso")
+        } catch (error) {
+            console.error("Erro ao deletar postagem:", error);
+        }
+    };
+
+
+    /*CHAMA A FUNÇÃO DE CARREGAR POST TODA VEZ QUE A TELA HOMESCREEN É ACESSADA */
     useFocusEffect(
         useCallback(() => {
             fetchPosts();
         }, [])
     );
 
+    /* VIEW DE RENDERIZAÇÃO DOS POST EXIBE UM LOADING NA TELA ATE CARREGAR OS POSTS */
     if (loading) {
         return (
             <View style={styles.loadingContainer}>
@@ -77,6 +99,13 @@ export default function HomeScreen() {
                         />
                         <View style={styles.postFooter}>
                             <Text style={styles.postDescription}>{post.Legenda_Postagem}</Text>
+
+                            {(nivelDeAcesso === 'admin' || post.Id_Usuario === userId) && (
+                                <TouchableOpacity onPress={() => handlerDeletePost(post.Id_Postagem)} style={styles.deleteButton}>
+                                    {/* <Feather name="trash-2" size={24} color={colors.primary} /> */}
+                                    <Text style={styles.deleteButtonText}>x</Text>
+                                </TouchableOpacity>
+                            )}
                         </View>
                     </View>
                 ))}
@@ -110,6 +139,7 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     title: {
+        marginTop: 20,
         textAlign: 'center',
         fontSize: 26,
         color: colors.text,
@@ -153,10 +183,22 @@ const styles = StyleSheet.create({
     },
     postFooter: {
         padding: 10,
+        display: 'flex',
+        flexDirection: 'row',
+        justifyContent: 'space-between',
     },
     postDescription: {
         fontSize: 14,
         color: colors.primary,
+    },
+    deleteButton: {
+        padding: 2,
+        margin: 0
+    },
+    deleteButtonText: {
+        color: colors.primary,
+        fontSize: 24,
+        fontWeight: 'bold'
     },
     loadingContainer: {
         flex: 1,

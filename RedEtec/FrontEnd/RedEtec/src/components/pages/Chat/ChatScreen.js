@@ -7,7 +7,8 @@ import {
     TouchableOpacity, 
     Image, 
     ActivityIndicator, 
-    RefreshControl 
+    RefreshControl, 
+    TextInput 
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
@@ -27,6 +28,7 @@ export default function ChatScreen() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [refreshing, setRefreshing] = useState(false);
+    const [searchText, setSearchText] = useState(''); // Estado para o texto de pesquisa
 
     useEffect(() => {
         fetchConversations();
@@ -37,19 +39,12 @@ export default function ChatScreen() {
         setError('');
         try {
             const token = await AsyncStorage.getItem('token');
-            if (!token) {
-                throw new Error('Token não encontrado. Por favor, faça login novamente.');
-            }
-
             const response = await axios.get('https://localhost:7140/api/Usuario/getcontatos', {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
             });
 
-            console.log("Conversations fetched:", response.data); // Verifique os dados recebidos
-            
-            // Ajuste para acessar o array de conversas
             setConversations(response.data.$values || []); 
         } catch (err) {
             console.error('Erro ao buscar conversas:', err);
@@ -72,14 +67,17 @@ export default function ChatScreen() {
         fetchConversations();
     };
 
-    const renderItem = ({ item }) => {
-        console.log("Rendering item:", item); // Adicione este log para ver o conteúdo do item
+    // Função para filtrar as conversas com base no texto de pesquisa
+    const filteredConversations = conversations.filter(conversation => 
+        conversation.Nome_Usuario?.toLowerCase().includes(searchText.toLowerCase())
+    );
 
+    const renderItem = ({ item }) => {
         return (
             <TouchableOpacity
                 style={styles.item}
                 onPress={() => handleSelectConversation(item)}
-                activeOpacity={0.7} // Adiciona feedback visual ao toque
+                activeOpacity={0.7}
             >
                 <Image 
                     source={require('../../../../assets/perfil.png')} 
@@ -121,8 +119,16 @@ export default function ChatScreen() {
                 </View>
             ) : null}
 
+            <TextInput
+                style={styles.searchInput}
+                placeholder="Pesquisar por nome"
+                placeholderTextColor={colors.text}
+                value={searchText}
+                onChangeText={setSearchText}
+            />
+
             <FlatList
-                data={conversations} 
+                data={filteredConversations} 
                 keyExtractor={(item) => item.id_Usuario ? item.id_Usuario.toString() : Math.random().toString()} 
                 renderItem={renderItem}
                 ListEmptyComponent={
@@ -133,7 +139,7 @@ export default function ChatScreen() {
                 refreshControl={
                     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
                 }
-                contentContainerStyle={conversations.length === 0 ? styles.flatListEmpty : null}
+                contentContainerStyle={filteredConversations.length === 0 ? styles.flatListEmpty : null}
             />
         </View>
     );
@@ -145,26 +151,31 @@ const styles = StyleSheet.create({
         backgroundColor: colors.background,
     },
     headerContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
+        height: 110,
         backgroundColor: colors.secondary,
-        padding: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     logoContainer: {
-        flex: 1,
+        position: 'absolute',
+        top: 40,
+        left: 20,
     },
     logo: {
-        height: 40,
-        width: 40,
+        width: 50,
+        height: 50,
     },
     titleContainer: {
-        flex: 2,
         alignItems: 'center',
+        justifyContent: 'center',
     },
     title: {
-        fontSize: 20,
+        marginTop: 20,
+        textAlign: 'center',
+        fontSize: 26,
         color: colors.text,
-        fontWeight: 'bold',
+        fontWeight: '700',
+        fontFamily: 'Noto Serif',
     },
     item: {
         flexDirection: 'row',
@@ -208,5 +219,14 @@ const styles = StyleSheet.create({
         color: colors.text,
         fontSize: 16,
         textAlign: 'center',
+    },
+    searchInput: {
+        height: 40,
+        borderColor: colors.border,
+        borderWidth: 1,
+        borderRadius: 5,
+        margin: 10,
+        paddingHorizontal: 10,
+        color: colors.primary,
     },
 });

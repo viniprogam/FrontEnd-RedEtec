@@ -13,12 +13,14 @@ const Stack = createNativeStackNavigator();
 export default function AuthNavigator() {
     return (
         <Stack.Navigator>
-            <Stack.Screen name="SingInToken" component={SingInToken} options={{ headerShown: false }} />
+            {/* <Stack.Screen name="SingInToken" component={SingInToken} options={{ headerShown: false }} /> */}
+            
             <Stack.Screen name="LoginScreen" component={LoginScreen} options={{ headerShown: false }} />
             <Stack.Screen name="RegisterScreen" component={RegisterScreen} options={{ headerShown: false }} />
             <Stack.Screen name="RegisterScreen2" component={RegisterScreen2} options={{ headerShown: false }} />
             <Stack.Screen name="RegisterScreen3" component={RegisterScreen3} options={{ headerShown: false }} />
             <Stack.Screen name="TabNavigator" component={TabNavigator} options={{ headerShown: false }} />
+            
         </Stack.Navigator>
     );
 }

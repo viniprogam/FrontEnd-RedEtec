@@ -1,19 +1,56 @@
-import React, { useState } from "react";
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, Image, Platform } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { RadioButton } from 'react-native-paper';
 import axios from 'axios';
 import DatePicker from 'react-native-modern-datepicker';
 import { getFormatedDate } from 'react-native-modern-datepicker';
 
+import * as ImagePicker from 'expo-image-picker';
+
 export default function RegisterScreen3() {
     const [Email_Usuario, setEmail_Usuario] = useState('');
-    const [Cidade_Usuario, setCidade_Usuario] = useState('');
+    const [Cidade_Usuario, setCidade_Usuario] = useState('qualquer');
     const [CPF_Usuario, setCPF_Usuario] = useState('');
     const [Data_Nascimento_Usuario, setData_Nascimento_Usuario] = useState('');
     const [Nivel_Acesso, setNivel_Acesso] = useState(5);
     const [Sexo_Usuario, setSexo_Usuario] = useState('');
     const [openCalendar, setOpenCalendar] = useState(false);
+
+
+    const [ProfileImage, setProfileImage] = useState(null)
+    const [file, setFile] = useState(null);
+
+
+    useEffect(() => {
+        (async () => {
+            if (Platform.OS !== 'web') {
+                const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+                if (status !== 'granted') {
+                    alert('Desculpe, precisamos de permissão para acessar as fotos para que isso funcione!');
+                }
+            }
+        })();
+    }, []);
+
+    const pickFileWeb = () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.onchange = (event) => {
+            const selectedFile = event.target.files[0];
+            setFile({
+            uri: URL.createObjectURL(selectedFile),
+            name: selectedFile.name,
+            type: selectedFile.type,
+            file: selectedFile, // Adicionando o arquivo ao estado
+        });
+        // Alert.alert('Arquivo Selecionado', selectedFile.name);
+        };
+        input.click(); // Simula o clique no input
+    };
+
+
+
 
     const navigation = useNavigation();
     const route = useRoute();
@@ -41,6 +78,7 @@ export default function RegisterScreen3() {
         setData_Nascimento_Usuario(formattedDate);
         setOpenCalendar(false);
     };
+
 
     const handleRegister = async () => {
         try {
@@ -78,6 +116,13 @@ export default function RegisterScreen3() {
 
     return (
         <View style={styles.container}>
+            <View style={styles.imgContainer}>
+                <Image
+                    source={require('../../../../assets/Logo.png')}
+                    style={styles.logo}
+                    resizeMode="contain"
+                />
+            </View>
             <View style={styles.form}>
                 <View style={styles.inputContainer}>
                     <Text style={styles.inputTitle}>Email</Text>
@@ -89,7 +134,10 @@ export default function RegisterScreen3() {
                         onChangeText={setEmail_Usuario}
                     />
                 </View>
-                <View style={styles.inputContainer}>
+                <TouchableOpacity style={styles.imagePickerButton} onPress={pickFileWeb}>
+                    <Text style={styles.imagePickerText}>Escolher Imagem</Text>
+                </TouchableOpacity>
+                {/* <View style={styles.inputContainer}>
                     <Text style={styles.inputTitle}>Cidade</Text>
                     <TextInput
                         style={styles.input}
@@ -98,7 +146,14 @@ export default function RegisterScreen3() {
                         value={Cidade_Usuario}
                         onChangeText={setCidade_Usuario}
                     />
-                </View>
+                </View> */}
+
+                {file && (
+                    <View style={styles.previewContainer}>
+                        <Image source={{ uri: file.uri }} style={styles.selectedImage} />
+                    </View>
+                )}
+
                 <View style={styles.inputContainer}>
                     <Text style={styles.inputTitle}>CPF</Text>
                     <TextInput
@@ -183,6 +238,17 @@ const styles = StyleSheet.create({
         padding: 20,
         backgroundColor: colors.background,
     },
+    imgContainer: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginVertical: 20,
+        marginTop: 20,
+        marginBottom: 10,
+    },
+    logo: {
+        width: 150,
+        height: 150,
+    },
     form: {
         marginHorizontal: 30,
     },
@@ -194,6 +260,17 @@ const styles = StyleSheet.create({
         fontSize: 18,
         fontWeight: '500',
         marginBottom: 6,
+    },
+    imagePickerButton: {
+        marginTop: 15,
+        backgroundColor: colors.secondary,
+        padding: 10,
+        alignItems: 'center',
+        borderRadius: 5,
+    },
+    imagePickerText: {
+        color: colors.text,
+        fontWeight: 'bold',
     },
     input: {
         height: 40,

@@ -21,6 +21,7 @@ export default function LoginScreen() {
         setError('');
         try {
             await login(username, password);
+            setProfile
             navigation.navigate('TabNavigator');
         } catch (err) {
             setError('Dados inválidos. Por favor, tente novamente.');

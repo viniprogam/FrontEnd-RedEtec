@@ -10,7 +10,8 @@ import {
 	ActivityIndicator, 
 	KeyboardAvoidingView, 
 	Platform, 
-	Alert 
+	Alert,
+	Pressable 
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
@@ -22,9 +23,7 @@ const colors = {
 	secondary: '#1E2A38',
 	background: '#F4F4F4',
 	text: '#FFFFFF',
-	border: '#8A8F9E',
-	messageUser: '#d1ffd1',
-	messageOther: '#f1f1f1',
+	border: '#8A8F9E'
 };
 
 export default function PrivateChatScreen({ route, navigation }) {
@@ -35,6 +34,11 @@ export default function PrivateChatScreen({ route, navigation }) {
 	const flatListRef = useRef(null);
 	const fetchIntervalRef = useRef(null);
 
+
+	const nivelDeAcesso = 'comum';
+	const myId = 2;  
+
+	/*FUNÇÃO PARA CARREGAR OS MENSAGENS */
 	const fetchMessages = async () => {
 		try {
 			const token = await AsyncStorage.getItem('token');
@@ -82,15 +86,17 @@ export default function PrivateChatScreen({ route, navigation }) {
 		}
 	};
 
+
 	useEffect(() => {
 		fetchMessages();
-		fetchIntervalRef.current = setInterval(fetchMessages, 10000);
+		fetchIntervalRef.current = setInterval(fetchMessages, 1000);
 
 		return () => {
 			clearInterval(fetchIntervalRef.current);
 		};
 	}, [userId]);
 
+	/*FUNÇÃO PARA ENVIAS AS MENSAGENS */
 	const handleSendMessage = async () => {
 		if (message.trim()) {
 			try {
@@ -138,7 +144,9 @@ export default function PrivateChatScreen({ route, navigation }) {
 		}
 	};
 
+	/*RENDERIZA AS MENSAGENS E ACORDO COM O ENVIO DO REMENETENTE: UserMessage ou OtherMessage */
 	const renderItem = ({ item }) => {
+		// console.log(item.EmissorId) CONSOLE PATA TESTES
 		return (
 			<View style={[styles.messageContainer, item.isSent ? styles.userMessage : styles.otherMessage]}>
 				{item.LocalizacaoMidia ? (
@@ -150,12 +158,19 @@ export default function PrivateChatScreen({ route, navigation }) {
 				<Text style={item.isSent ? styles.userText : styles.otherText}>
 					{item.Mensagem}
 				</Text>
-				<Text style={styles.timestamp}>
-					{moment(item.Timestamp).format('LT')}
-				</Text>
+				{(nivelDeAcesso === 'comum' || msg.EmissorId === myId) && (
+					<TouchableOpacity onPress={() => handlerDeleteMessage(item.Id)}>
+						<Text>excluir</Text>
+					</TouchableOpacity>
+				)}
 			</View>
 		);
 	};
+
+	/*FUNÇÃO PAR ADELETAR MENSAGENS */
+	const handlerDeleteMessage = async (userId, messageId) => {
+		await axios.delete(`https://localhost:7140/api/Chat/${userId}/${messageId}`)
+	}
 
 	const keyExtractor = (item) => {
 		return item.Timestamp instanceof Date && !isNaN(item.Timestamp.getTime()) 
@@ -198,7 +213,7 @@ export default function PrivateChatScreen({ route, navigation }) {
 					placeholderTextColor={colors.border}
 				/>
 				<TouchableOpacity onPress={handleSendMessage}>
-					<Ionicons name="send" size={24} color={colors.primary} />
+					<Ionicons name="send" size={24} color={colors.text} />
 				</TouchableOpacity>
 			</View>
 		</KeyboardAvoidingView>
@@ -209,7 +224,6 @@ const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 		backgroundColor: colors.background,
-		padding: 10,
 	},
 	header: {
 		flexDirection: 'row',
@@ -217,7 +231,7 @@ const styles = StyleSheet.create({
 		marginBottom: 10,
 		padding: 10,
 		backgroundColor: colors.secondary,
-		borderRadius: 10,
+		
 	},
 	profileImage: {
 		width: 40,
@@ -235,11 +249,11 @@ const styles = StyleSheet.create({
 		borderRadius: 10,
 	},
 	userMessage: {
-		backgroundColor: '#3e3e',
+		backgroundColor: colors.secondary,
 		alignSelf: 'flex-start',
 	},
 	otherMessage: {
-		backgroundColor: colors.messageOther,
+		backgroundColor: colors.border,
 		alignSelf: 'flex-end',
 	},
 	messageImage: {
@@ -249,27 +263,21 @@ const styles = StyleSheet.create({
 		marginBottom: 5,
 	},
 	userText: {
-		color: colors.primary,
+		color: colors.text,
 	},
 	otherText: {
-		color: colors.secondary,
-	},
-	timestamp: {
-		fontSize: 10,
-		color: colors.border,
-		alignSelf: 'flex-end',
+		color: colors.text,
 	},
 	inputContainer: {
 		flexDirection: 'row',
 		alignItems: 'center',
 		backgroundColor: colors.secondary,
-		borderRadius: 10,
 		padding: 10,
 	},
 	input: {
 		flex: 1,
 		backgroundColor: '#fff',
-		borderRadius: 10,
+		borderRadius: 8,
 		padding: 10,
 		marginRight: 10,
 	},
