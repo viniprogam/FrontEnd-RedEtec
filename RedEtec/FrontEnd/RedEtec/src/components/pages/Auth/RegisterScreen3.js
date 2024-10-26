@@ -3,6 +3,8 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert } from "reac
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { RadioButton } from 'react-native-paper';
 import axios from 'axios';
+import DatePicker from 'react-native-modern-datepicker';
+import { getFormatedDate } from 'react-native-modern-datepicker';
 
 export default function RegisterScreen3() {
     const [Email_Usuario, setEmail_Usuario] = useState('');
@@ -11,6 +13,7 @@ export default function RegisterScreen3() {
     const [Data_Nascimento_Usuario, setData_Nascimento_Usuario] = useState('');
     const [Nivel_Acesso, setNivel_Acesso] = useState(5);
     const [Sexo_Usuario, setSexo_Usuario] = useState('');
+    const [openCalendar, setOpenCalendar] = useState(false);
 
     const navigation = useNavigation();
     const route = useRoute();
@@ -19,6 +22,24 @@ export default function RegisterScreen3() {
     const formatDate = (date) => {
         const [day, month, year] = date.split('/');
         return `${year}-${month}-${day}`;
+    };
+
+    const handleCpfChange = (text) => {
+        let formattedCpf = text.replace(/\D/g, '');
+        if (formattedCpf.length > 9) {
+            formattedCpf = formattedCpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+        } else if (formattedCpf.length > 6) {
+            formattedCpf = formattedCpf.replace(/(\d{3})(\d{3})(\d{3})/, '$1.$2.$3');
+        } else if (formattedCpf.length > 3) {
+            formattedCpf = formattedCpf.replace(/(\d{3})(\d{3})/, '$1.$2');
+        }
+        setCPF_Usuario(formattedCpf);
+    };
+
+    const handleDateChange = (selectedDate) => {
+        const formattedDate = getFormatedDate(new Date(selectedDate), 'DD/MM/YYYY');
+        setData_Nascimento_Usuario(formattedDate);
+        setOpenCalendar(false);
     };
 
     const handleRegister = async () => {
@@ -47,7 +68,7 @@ export default function RegisterScreen3() {
 
             console.log('Cadastro bem-sucedido:', response.data);
             Alert.alert("Sucesso", "Cadastro realizado com sucesso!");
-            navigation.navigate('TabNavigator'); // Navega para HomeScreen após o cadastro
+            navigation.navigate('LoginScreen');
         } catch (error) {
             console.error('Erro ao registrar:', error);
             const errorMessage = error.response?.data?.message || 'Não foi possível realizar o cadastro. Tente novamente.';
@@ -58,7 +79,6 @@ export default function RegisterScreen3() {
     return (
         <View style={styles.container}>
             <View style={styles.form}>
-                {/* Campos de entrada */}
                 <View style={styles.inputContainer}>
                     <Text style={styles.inputTitle}>Email</Text>
                     <TextInput
@@ -86,52 +106,59 @@ export default function RegisterScreen3() {
                         keyboardType="numeric"
                         placeholder="Digite seu CPF"
                         value={CPF_Usuario}
-                        onChangeText={setCPF_Usuario}
+                        onChangeText={handleCpfChange}
+                        maxLength={14} // Limite de caracteres para CPF formatado
                     />
                 </View>
                 <View style={styles.inputContainer}>
                     <Text style={styles.inputTitle}>Data de Nascimento</Text>
-                    <TextInput
-                        style={styles.input}
-                        keyboardType="numeric"
-                        placeholder="DD/MM/AAAA"
-                        value={Data_Nascimento_Usuario}
-                        onChangeText={setData_Nascimento_Usuario}
-                    />
+                    <TouchableOpacity onPress={() => setOpenCalendar(true)}>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="DD/MM/AAAA"
+                            value={Data_Nascimento_Usuario}
+                            editable={false}
+                        />
+                    </TouchableOpacity>
                 </View>
+                {openCalendar && (
+                    <DatePicker
+                        mode="calendar"
+                        maximumDate={getFormatedDate(new Date(), 'YYYY/MM/DD')}
+                        onDateChange={handleDateChange}
+                        locale="pt"
+                        options={{
+                            mainColor: '#040915',
+                        }}
+                    />
+                )}
                 <View style={styles.inputContainer}>
                     <Text style={styles.inputTitle}>Sexo</Text>
                     <View style={styles.radioContainer}>
-                        <TouchableOpacity
-                            style={styles.radioButton}
-                            onPress={() => setSexo_Usuario('M')}
-                        >
-                            <RadioButton
-                                value="M"
-                                status={Sexo_Usuario === 'M' ? 'checked' : 'unchecked'}
+                        <View style={styles.radioButton}>
+                            <RadioButton 
+                                value="M" 
+                                status={Sexo_Usuario === 'M' ? 'checked' : 'unchecked'} 
+                                onPress={() => setSexo_Usuario('M')} 
                             />
                             <Text style={styles.radioLabel}>Masculino</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={styles.radioButton}
-                            onPress={() => setSexo_Usuario('F')}
-                        >
-                            <RadioButton
-                                value="F"
-                                status={Sexo_Usuario === 'F' ? 'checked' : 'unchecked'}
+                        </View>
+                        <View style={styles.radioButton}>
+                            <RadioButton 
+                                value="F" 
+                                status={Sexo_Usuario === 'F' ? 'checked' : 'unchecked'} 
+                                onPress={() => setSexo_Usuario('F')} 
                             />
                             <Text style={styles.radioLabel}>Feminino</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity
-                            style={styles.radioButton}
-                            onPress={() => setSexo_Usuario('O')}
-                        >
-                            <RadioButton
-                                value="O"
-                                status={Sexo_Usuario === 'O' ? 'checked' : 'unchecked'}
+                        </View>
+                        <View style={styles.radioButton}>
+                            <RadioButton 
+                                value="O" 
+                                status={Sexo_Usuario === 'O' ? 'checked' : 'unchecked'} 
+                                onPress={() => setSexo_Usuario('O')} 
                             />
                             <Text style={styles.radioLabel}>Outro</Text>
-                        </TouchableOpacity>
+                        </View>
                     </View>
                 </View>
             </View>
@@ -171,20 +198,21 @@ const styles = StyleSheet.create({
     input: {
         height: 40,
         fontSize: 16,
-        paddingHorizontal: 8,
+        paddingHorizontal: 6,
         borderBottomColor: colors.primary,
         borderBottomWidth: 1,
     },
     radioContainer: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
+        flexDirection: 'row', // Alinha em linha horizontal
+        justifyContent: 'space-between', // Distribui igualmente entre os itens
+        marginBottom: 20, // Espaçamento inferior entre as opções e o próximo campo
     },
     radioButton: {
-        flexDirection: 'column',
-        alignItems: 'center',
+        flexDirection: 'row', // Mantém o ícone e o texto na mesma linha
+        alignItems: 'center', // Alinha verticalmente o ícone e o texto
     },
     radioLabel: {
-        marginLeft: 8,
+        marginLeft: 6,
         fontSize: 16,
         color: colors.primary,
     },
