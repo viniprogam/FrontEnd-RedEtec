@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, Image, Platform } from "react-native";
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, Image, Modal  } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { RadioButton } from 'react-native-paper';
 import axios from 'axios';
 import DatePicker from 'react-native-modern-datepicker';
 import { getFormatedDate } from 'react-native-modern-datepicker';
-import * as ImagePicker from 'expo-image-picker';
 
 export default function RegisterScreen3() {
     const [Email_Usuario, setEmail_Usuario] = useState('');
@@ -13,9 +12,19 @@ export default function RegisterScreen3() {
     const [CPF_Usuario, setCPF_Usuario] = useState('');
     const [Data_Nascimento_Usuario, setData_Nascimento_Usuario] = useState('');
     const [Nivel_Acesso, setNivel_Acesso] = useState(5);
-    const [Sexo_Usuario, setSexo_Usuario] = useState('');
+    const [Sexo_Usuario, setSexo_Usuario] = useState('M');
     const [openCalendar, setOpenCalendar] = useState(false);
     const [errorMessage, setErrorMessage] = useState(''); // Mensagem de erro
+
+    const [selectedArea, setSelectedArea] = useState('Selecione a área'); // Área selecionada
+    const [showSelectOptions, setShowSelectOptions] = useState(false); // Controle de visibilidade do modal de opções
+
+    const areas = ['Desenvolvimento de Sistemas', 'Administração', 'Logística', 'Eletroeletrônica', 'Contabilidade'];
+
+    const handleAreaSelect = (area) => {
+        setSelectedArea(area);
+        setShowSelectOptions(false); // Esconde o menu após a seleção
+    };
 
 
     const navigation = useNavigation();
@@ -175,38 +184,37 @@ export default function RegisterScreen3() {
                         }}
                     />
                 )}
+                
+
+                {/* Área de Seleção */}
                 <View style={styles.inputContainer}>
-                    <Text style={styles.inputTitle}>Sexo</Text>
-                    <View style={styles.radioContainer}>
-                        <View style={styles.radioButton}>
-                            <RadioButton 
-                                value="M" 
-                                status={Sexo_Usuario === 'M' ? 'checked' : 'unchecked'} 
-                                onPress={() => setSexo_Usuario('M')} 
-                            />
-                            <Text style={styles.radioLabel}>Masculino</Text>
-                        </View>
-                        <View style={styles.radioButton}>
-                            <RadioButton 
-                                value="F" 
-                                status={Sexo_Usuario === 'F' ? 'checked' : 'unchecked'} 
-                                onPress={() => setSexo_Usuario('F')} 
-                            />
-                            <Text style={styles.radioLabel}>Feminino</Text>
+                    <Text style={styles.inputTitle}>Área de Interesse</Text>
+                    <Text style={styles.text}>A área deve ser selecionada conforme o seu interesse, pois você será adicionado à comunidade correspondente, com acesso a conteúdos exclusivos.</Text>
+                    <TouchableOpacity style={styles.selectButton} onPress={() => setShowSelectOptions(true)}>
+                        <Text style={styles.selectButtonText}>{selectedArea}</Text>
+                    </TouchableOpacity>
+                </View>
 
-                        </View>
-
-                        <View style={styles.radioButton}>
-                            <RadioButton 
-                                value="O" 
-                                status={Sexo_Usuario === 'O' ? 'checked' : 'unchecked'} 
-                                onPress={() => setSexo_Usuario('O')} 
-                            />
-                            <Text style={styles.radioLabel}>Outro</Text>
-
+                {/* Modal para exibir as opções */}
+                <Modal visible={showSelectOptions} transparent animationType="slide">
+                    <View style={styles.modalContainer}>
+                        <View style={styles.modalContent}>
+                            {areas.map((area, index) => (
+                                <TouchableOpacity
+                                    key={index}
+                                    style={styles.optionButton}
+                                    onPress={() => handleAreaSelect(area)}
+                                >
+                                    <Text style={styles.optionText}>{area}</Text>
+                                </TouchableOpacity>
+                            ))}
+                            <TouchableOpacity style={styles.cancelButton} onPress={() => setShowSelectOptions(false)}>
+                                <Text style={styles.cancelButtonText}>Cancelar</Text>
+                            </TouchableOpacity>
                         </View>
                     </View>
-                </View>
+                </Modal>
+
             </View>
             <TouchableOpacity style={styles.button} onPress={handleRegister}>
                 <Text style={styles.buttonText}>Finalizar</Text>
@@ -237,8 +245,8 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     logo: {
-        width: 150,
-        height: 150,
+        width: 120,
+        height: 120,
     },
     form: {
         marginHorizontal: 30,
@@ -259,10 +267,16 @@ const styles = StyleSheet.create({
         borderBottomColor: colors.primary,
         borderBottomWidth: 1,
     },
+    text: {
+        color: colors.border,
+        fontSize: 12,
+        fontWeight: '400',
+        marginBottom: 10,
+    },
     radioContainer: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: 20,
+        marginBottom: 1,
     },
     radioButton: {
         flexDirection: 'row',
@@ -275,6 +289,7 @@ const styles = StyleSheet.create({
     },
     button: {
         backgroundColor: colors.primary,
+        margin: 10,
         borderRadius: 4,
         width: '60%',
         height: 52,
@@ -286,5 +301,51 @@ const styles = StyleSheet.create({
         color: colors.text,
         fontWeight: '600',
         fontSize: 16,
+    },
+    selectButton: {
+        paddingVertical: 10,
+        borderColor: '#8A8F9E',
+        borderWidth: 1,
+        borderRadius: 4,
+        paddingHorizontal: 10,
+        backgroundColor: '#FFFFFF',
+    },
+    selectButtonText: {
+        fontSize: 16,
+        color: '#040915',
+    },
+    modalContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalContent: {
+        backgroundColor: '#FFFFFF',
+        padding: 20,
+        borderRadius: 4,
+        width: '80%',
+        alignItems: 'center',
+    },
+    optionButton: {
+        paddingVertical: 10,
+        width: '100%',
+        alignItems: 'center',
+    },
+    optionText: {
+        fontSize: 16,
+        color: '#040915',
+    },
+    cancelButton: {
+        paddingVertical: 10,
+        width: '100%',
+        alignItems: 'center',
+        marginTop: 10,
+        borderTopWidth: 1,
+        borderColor: '#ccc',
+    },
+    cancelButtonText: {
+        fontSize: 16,
+        color: '#FF0000',
     },
 });
