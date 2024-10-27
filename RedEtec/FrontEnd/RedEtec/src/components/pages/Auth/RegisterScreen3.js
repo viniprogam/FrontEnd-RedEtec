@@ -15,39 +15,12 @@ export default function RegisterScreen3() {
     const [Nivel_Acesso, setNivel_Acesso] = useState(5);
     const [Sexo_Usuario, setSexo_Usuario] = useState('');
     const [openCalendar, setOpenCalendar] = useState(false);
-    const [ProfileImage, setProfileImage] = useState(null);
-    const [file, setFile] = useState(null);
     const [errorMessage, setErrorMessage] = useState(''); // Mensagem de erro
 
-    useEffect(() => {
-        (async () => {
-            if (Platform.OS !== 'web') {
-                const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-                if (status !== 'granted') {
-                    alert('Desculpe, precisamos de permissão para acessar as fotos para que isso funcione!');
-                }
-            }
-        })();
-    }, []);
-
-    const pickFileWeb = () => {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.onchange = (event) => {
-            const selectedFile = event.target.files[0];
-            setFile({
-                uri: URL.createObjectURL(selectedFile),
-                name: selectedFile.name,
-                type: selectedFile.type,
-                file: selectedFile,
-            });
-        };
-        input.click();
-    };
 
     const navigation = useNavigation();
     const route = useRoute();
-    const { Nome_Usuario, Senha_Usuario } = route.params;
+    const { Nome_Usuario, Senha_Usuario, ProfileImage } = route.params;
 
     const formatDate = (date) => {
         const [day, month, year] = date.split('/');
@@ -105,6 +78,9 @@ export default function RegisterScreen3() {
     };
 
     const handleRegister = async () => {
+
+        // console.log(ProfileImage) TESTE PARA VER SE A IMAGEM ESTAVA SENDO RECEBIDA
+
         if (!validateCPF(CPF_Usuario)) {
             setErrorMessage("CPF inválido. Por favor, verifique o número informado."); // Atualiza a mensagem de erro
             return; // Se o CPF for inválido, interrompe a execução da função
@@ -165,21 +141,10 @@ export default function RegisterScreen3() {
                         onChangeText={setEmail_Usuario}
                     />
                 </View>
-                <TouchableOpacity style={styles.imagePickerButton} onPress={pickFileWeb}>
-                    <Text style={styles.imagePickerText}>Escolher Imagem</Text>
-                </TouchableOpacity>
-
-                {file && (
-                    <View style={styles.previewContainer}>
-                        <Image source={{ uri: file.uri }} style={styles.selectedImage} />
-                    </View>
-                )}
-
                 <View style={styles.inputContainer}>
                     <Text style={styles.inputTitle}>CPF</Text>
                     <TextInput
                         style={styles.input}
-                        keyboardType="numeric"
                         placeholder="Digite seu CPF"
                         value={CPF_Usuario}
                         onChangeText={handleCpfChange}
@@ -230,7 +195,7 @@ export default function RegisterScreen3() {
                             <Text style={styles.radioLabel}>Feminino</Text>
 
                         </View>
-                       
+
                         <View style={styles.radioButton}>
                             <RadioButton 
                                 value="O" 
@@ -287,17 +252,6 @@ const styles = StyleSheet.create({
         fontWeight: '500',
         marginBottom: 6,
     },
-    imagePickerButton: {
-        marginTop: 15,
-        backgroundColor: colors.secondary,
-        padding: 10,
-        alignItems: 'center',
-        borderRadius: 5,
-    },
-    imagePickerText: {
-        color: colors.text,
-        fontWeight: 'bold',
-    },
     input: {
         height: 40,
         fontSize: 16,
@@ -306,13 +260,13 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
     },
     radioContainer: {
-        flexDirection: 'row', // Alinha em linha horizontal
-        justifyContent: 'space-between', // Distribui igualmente entre os itens
-        marginBottom: 20, // Espaçamento inferior entre as opções e o próximo campo
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 20,
     },
     radioButton: {
-        flexDirection: 'row', // Mantém o ícone e o texto na mesma linha
-        alignItems: 'center', // Alinha verticalmente o ícone e o texto
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     radioLabel: {
         marginLeft: 6,

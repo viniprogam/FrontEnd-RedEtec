@@ -16,7 +16,7 @@ export default function HomeScreen() {
     const [posts, setPosts] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    const nivelDeAcesso = 'comum';
+    const nivelDeAcesso = 'admin';
     const userId = 2;
 
 

@@ -23,7 +23,7 @@ export default function RegisterScreen() {
             </View>
             <View style={styles.form}>
                 <View style={styles.textContainer}>
-                    <Text style={styles.title}>Criar nome de usuário</Text>
+                    <Text style={styles.title}>Nome de usuário</Text>
                     <Text style={styles.text}>Escolha um nome de usuário para sua nova conta.</Text>
                 </View>
                 <View style={styles.inputContainer}>
@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
     },
     text: {
         color: colors.border,
-        fontSize: 10,
+        fontSize: 12,
         fontWeight: '400',
         marginBottom: 10,
     },
