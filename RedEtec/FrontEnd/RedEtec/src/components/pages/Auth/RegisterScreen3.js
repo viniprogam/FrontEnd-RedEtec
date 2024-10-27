@@ -5,7 +5,6 @@ import { RadioButton } from 'react-native-paper';
 import axios from 'axios';
 import DatePicker from 'react-native-modern-datepicker';
 import { getFormatedDate } from 'react-native-modern-datepicker';
-
 import * as ImagePicker from 'expo-image-picker';
 
 export default function RegisterScreen3() {
@@ -16,11 +15,9 @@ export default function RegisterScreen3() {
     const [Nivel_Acesso, setNivel_Acesso] = useState(5);
     const [Sexo_Usuario, setSexo_Usuario] = useState('');
     const [openCalendar, setOpenCalendar] = useState(false);
-
-
-    const [ProfileImage, setProfileImage] = useState(null)
+    const [ProfileImage, setProfileImage] = useState(null);
     const [file, setFile] = useState(null);
-
+    const [errorMessage, setErrorMessage] = useState(''); // Mensagem de erro
 
     useEffect(() => {
         (async () => {
@@ -39,18 +36,14 @@ export default function RegisterScreen3() {
         input.onchange = (event) => {
             const selectedFile = event.target.files[0];
             setFile({
-            uri: URL.createObjectURL(selectedFile),
-            name: selectedFile.name,
-            type: selectedFile.type,
-            file: selectedFile, // Adicionando o arquivo ao estado
-        });
-        // Alert.alert('Arquivo Selecionado', selectedFile.name);
+                uri: URL.createObjectURL(selectedFile),
+                name: selectedFile.name,
+                type: selectedFile.type,
+                file: selectedFile,
+            });
         };
-        input.click(); // Simula o clique no input
+        input.click();
     };
-
-
-
 
     const navigation = useNavigation();
     const route = useRoute();
@@ -59,6 +52,38 @@ export default function RegisterScreen3() {
     const formatDate = (date) => {
         const [day, month, year] = date.split('/');
         return `${year}-${month}-${day}`;
+    };
+
+    const validateCPF = (cpf) => {
+        // Remove caracteres não numéricos
+        cpf = cpf.replace(/\D/g, '');
+
+        // CPF deve ter 11 dígitos
+        if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) {
+            return false;
+        }
+
+        // Cálculo do primeiro dígito verificador
+        let sum = 0;
+        for (let i = 0; i < 9; i++) {
+            sum += parseInt(cpf.charAt(i)) * (10 - i);
+        }
+        let firstDigit = (sum * 10) % 11;
+        if (firstDigit === 10 || firstDigit === 11) {
+            firstDigit = 0;
+        }
+
+        // Cálculo do segundo dígito verificador
+        sum = 0;
+        for (let i = 0; i < 10; i++) {
+            sum += parseInt(cpf.charAt(i)) * (11 - i);
+        }
+        let secondDigit = (sum * 10) % 11;
+        if (secondDigit === 10 || secondDigit === 11) {
+            secondDigit = 0;
+        }
+
+        return firstDigit === parseInt(cpf.charAt(9)) && secondDigit === parseInt(cpf.charAt(10));
     };
 
     const handleCpfChange = (text) => {
@@ -79,8 +104,14 @@ export default function RegisterScreen3() {
         setOpenCalendar(false);
     };
 
-
     const handleRegister = async () => {
+        if (!validateCPF(CPF_Usuario)) {
+            setErrorMessage("CPF inválido. Por favor, verifique o número informado."); // Atualiza a mensagem de erro
+            return; // Se o CPF for inválido, interrompe a execução da função
+        } else {
+            setErrorMessage(''); // Limpa a mensagem de erro se o CPF for válido
+        }
+
         try {
             const formattedDate = formatDate(Data_Nascimento_Usuario);
             console.log({
@@ -137,16 +168,6 @@ export default function RegisterScreen3() {
                 <TouchableOpacity style={styles.imagePickerButton} onPress={pickFileWeb}>
                     <Text style={styles.imagePickerText}>Escolher Imagem</Text>
                 </TouchableOpacity>
-                {/* <View style={styles.inputContainer}>
-                    <Text style={styles.inputTitle}>Cidade</Text>
-                    <TextInput
-                        style={styles.input}
-                        autoCapitalize="none"
-                        placeholder="Digite sua cidade"
-                        value={Cidade_Usuario}
-                        onChangeText={setCidade_Usuario}
-                    />
-                </View> */}
 
                 {file && (
                     <View style={styles.previewContainer}>
@@ -162,7 +183,7 @@ export default function RegisterScreen3() {
                         placeholder="Digite seu CPF"
                         value={CPF_Usuario}
                         onChangeText={handleCpfChange}
-                        maxLength={14} // Limite de caracteres para CPF formatado
+                        maxLength={14}
                     />
                 </View>
                 <View style={styles.inputContainer}>
@@ -179,7 +200,9 @@ export default function RegisterScreen3() {
                 {openCalendar && (
                     <DatePicker
                         mode="calendar"
-                        maximumDate={getFormatedDate(new Date(), 'YYYY/MM/DD')}
+                        selected={getFormatedDate(new Date('2018-01-01'), 'YYYY-MM-DD')}
+                        minimumDate={getFormatedDate(new Date('1920-01-01'), 'YYYY-MM-DD')}
+                        maximumDate={getFormatedDate(new Date('2019-01-01'), 'YYYY-MM-DD')}
                         onDateChange={handleDateChange}
                         locale="pt"
                         options={{
@@ -205,7 +228,9 @@ export default function RegisterScreen3() {
                                 onPress={() => setSexo_Usuario('F')} 
                             />
                             <Text style={styles.radioLabel}>Feminino</Text>
+
                         </View>
+                       
                         <View style={styles.radioButton}>
                             <RadioButton 
                                 value="O" 
@@ -213,6 +238,7 @@ export default function RegisterScreen3() {
                                 onPress={() => setSexo_Usuario('O')} 
                             />
                             <Text style={styles.radioLabel}>Outro</Text>
+
                         </View>
                     </View>
                 </View>
