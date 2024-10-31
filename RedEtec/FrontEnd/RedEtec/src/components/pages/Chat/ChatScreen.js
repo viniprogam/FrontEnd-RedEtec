@@ -45,7 +45,7 @@ export default function ChatScreen() {
                 }
             });
 
-            setConversations(response.data.$values || []); 
+            setConversations(response.data); 
         } catch (err) {
             console.error('Erro ao buscar conversas:', err);
             setError(err.message || 'Erro ao buscar conversas. Tente novamente mais tarde.');

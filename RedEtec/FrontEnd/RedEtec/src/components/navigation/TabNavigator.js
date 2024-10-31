@@ -1,10 +1,11 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import Feather from 'react-native-vector-icons/Feather';
 import HomeScreen from '../../components/pages/Home/HomeScreen';
 import PostScreen from '../../components/pages/Post/PostScreen';
 import ProfileScreen from '../../components/pages/Profile/ProfileScreen';
 import ChatStackNavigator from './ChatStackNavigator';
+
+import { Ionicons } from '@expo/vector-icons';
 
 const Tab = createBottomTabNavigator();
 
@@ -20,19 +21,19 @@ export default function TabNavigator() {
                             iconName = 'home'; // Ícone Feather para Home
                             break;
                         case 'Post':
-                            iconName = 'edit-2'; // Ícone Feather para Post (equivalente ao pencil-box)
+                            iconName = 'add-circle'; // Ícone Feather para Post (equivalente ao pencil-box)
                             break;
                         case 'Chat':
-                            iconName = 'message-circle'; // Ícone Feather para Chat
+                            iconName = 'chatbubbles'; // Ícone Feather para Chat
                             break;
                         case 'Profile':
-                            iconName = 'user'; // Ícone Feather para Profile
+                            iconName = 'cog'; // Ícone Feather para Profile
                             break;
                         default:
-                            iconName = 'circle'; // Ícone Feather padrão
+                            iconName = 'ellipse'; // Ícone Feather padrão
                     }
 
-                    return <Feather name={iconName} size={size} color={color} />; // Use Feather aqui
+                    return <Ionicons name={iconName} size={size} color={color} />;
                 },
                 tabBarActiveTintColor: '#040915',
                 tabBarInactiveTintColor: '#8A8F9E',

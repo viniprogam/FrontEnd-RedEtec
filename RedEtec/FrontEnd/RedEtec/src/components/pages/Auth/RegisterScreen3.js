@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, Image, Modal  } from "react-native";
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, Image, Modal } from "react-native";
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { RadioButton } from 'react-native-paper';
 import axios from 'axios';
-import DatePicker from 'react-native-modern-datepicker';
-import { getFormatedDate } from 'react-native-modern-datepicker';
+import { Calendar, LocaleConfig } from "react-native-calendars";
+import { ptBR } from "../../utils/localeCalendarConfig";
+
+LocaleConfig.locales["pt-br"] = ptBR;
+LocaleConfig.defaultLocale = "pt-br"
 
 export default function RegisterScreen3() {
     const [Email_Usuario, setEmail_Usuario] = useState('');
@@ -15,7 +18,7 @@ export default function RegisterScreen3() {
     const [Sexo_Usuario, setSexo_Usuario] = useState('M');
     const [openCalendar, setOpenCalendar] = useState(false);
     const [errorMessage, setErrorMessage] = useState(''); // Mensagem de erro
-
+    const [selectedDay, setSelectedDay] = useState('');
     const [selectedArea, setSelectedArea] = useState('Selecione a área'); // Área selecionada
     const [showSelectOptions, setShowSelectOptions] = useState(false); // Controle de visibilidade do modal de opções
 
@@ -31,10 +34,18 @@ export default function RegisterScreen3() {
     const route = useRoute();
     const { Nome_Usuario, Senha_Usuario, ProfileImage } = route.params;
 
+    const [currentYear, setCurrentYear] = useState('2018-01-01');
+    
+
     const formatDate = (date) => {
         const [day, month, year] = date.split('/');
         return `${year}-${month}-${day}`;
     };
+
+    const formattedDate = formatDate(selectedDay);
+
+    const formatToTwoDigits = (num) => (num < 10 ? `0${num}` : num);
+
 
     const validateCPF = (cpf) => {
         // Remove caracteres não numéricos
@@ -80,11 +91,7 @@ export default function RegisterScreen3() {
         setCPF_Usuario(formattedCpf);
     };
 
-    const handleDateChange = (selectedDate) => {
-        const formattedDate = getFormatedDate(new Date(selectedDate), 'DD/MM/YYYY');
-        setData_Nascimento_Usuario(formattedDate);
-        setOpenCalendar(false);
-    };
+
 
     const handleRegister = async () => {
 
@@ -102,7 +109,7 @@ export default function RegisterScreen3() {
             console.log({
                 Nome_Usuario,
                 CPF_Usuario,
-                Data_Nascimento_Usuario: formattedDate,
+                Data_Nascimento_Usuario,
                 Cidade_Usuario,
                 Email_Usuario,
                 Senha_Usuario,
@@ -171,20 +178,43 @@ export default function RegisterScreen3() {
                         />
                     </TouchableOpacity>
                 </View>
+
                 {openCalendar && (
-                    <DatePicker
-                        mode="calendar"
-                        selected={getFormatedDate(new Date('2018-01-01'), 'YYYY-MM-DD')}
-                        minimumDate={getFormatedDate(new Date('1920-01-01'), 'YYYY-MM-DD')}
-                        maximumDate={getFormatedDate(new Date('2019-01-01'), 'YYYY-MM-DD')}
-                        onDateChange={handleDateChange}
-                        locale="pt"
-                        options={{
-                            mainColor: '#040915',
+                    <Calendar
+                        current={currentYear} // Adicionando a propriedade current
+                        onDayPress={(day) => {
+                            const formattedDay = formatToTwoDigits(day.day);
+                            const formattedMonth = formatToTwoDigits(day.month);
+                            setSelectedDay(`${day.year}-${formattedMonth}-${formattedDay}`);
+                            setOpenCalendar(false);
+                            setData_Nascimento_Usuario(`${formattedDay}/${formattedMonth}/${day.year}`);
                         }}
+                        headerStyle={{
+                            borderBottomWidth: 0.4,
+                            borderBottomColor: "#000000", // Cor da borda inferior preta
+                            paddingBottom: 0,
+                            marginBottom: 0,
+                            backgroundColor: "transparent", // Fundo da header transparenter
+                            marginTop: -35,
+
+                        }}
+                        theme={{
+                            textMonthFontSize: 15,
+                            monthTextColor: "#000000", // Cor do texto do mês preto
+                            todayTextColor: "#000000", // Cor do texto do dia atual preto
+                            selectedDayBackgroundColor: "#FFFFFF", // Fundo do dia selecionado branco
+                            selectedDayTextColor: "#000000", // Texto do dia selecionado preto
+                            arrowColor: "#000000", // Cor das setas pretas
+                            calendarBackground: "transparent", // Fundo do calendário transparente
+                            textDayStyle: { color: "#000000" }, // Cor do texto dos dias pretos
+                            textDisabledColor: "#000000", // Cor do texto dos dias desabilitados preto
+
+                        }}
+                        minDate={'1950-01-01'} // Define a data mínima como 1 de janeiro de 1950
+                        maxDate={'2018-12-31'} // Define a data máxima como 31 de dezembro de 2018
                     />
+
                 )}
-                
 
                 {/* Área de Seleção */}
                 <View style={styles.inputContainer}>

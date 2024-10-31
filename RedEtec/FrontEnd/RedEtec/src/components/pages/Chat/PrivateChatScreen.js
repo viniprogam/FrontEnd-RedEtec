@@ -11,12 +11,11 @@ import {
 	KeyboardAvoidingView, 
 	Platform, 
 	Alert,
-	Pressable 
+	Modal
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import moment from 'moment';
 
 const colors = {
 	primary: '#040915',
@@ -34,9 +33,12 @@ export default function PrivateChatScreen({ route, navigation }) {
 	const flatListRef = useRef(null);
 	const fetchIntervalRef = useRef(null);
 
+	const [nivelDeAcesso, setNivelDeAcesso] = useState(null);
+    const [myId, setMyId] = useState(null);
 
-	const nivelDeAcesso = 'comum';
-	const myId = 2;  
+	const [modalVisible, setModalVisible] = useState(false);
+	const [selectedMessageId, setSelectedMessageId] = useState(null);
+
 
 	/*FUNÇÃO PARA CARREGAR OS MENSAGENS */
 	const fetchMessages = async () => {
@@ -52,9 +54,12 @@ export default function PrivateChatScreen({ route, navigation }) {
 				}
 			});
 
+			console.log(response)
+
 			if (response.status === 200) {
-				if (Array.isArray(response.data.$values)) {
-					const fetchedMessages = response.data.$values.map(msg => ({
+				if (Array.isArray(response.data)) {
+					const fetchedMessages = response.data.map(msg => ({
+						MensagemId: msg.MensagemId,
 						EmissorId: msg.EmissorId,
 						ReceptorId: msg.ReceptorId,
 						Mensagem: msg.Mensagem,
@@ -89,7 +94,8 @@ export default function PrivateChatScreen({ route, navigation }) {
 
 	useEffect(() => {
 		fetchMessages();
-		fetchIntervalRef.current = setInterval(fetchMessages, 1000);
+		fetchIntervalRef.current = setInterval(fetchMessages, 100);
+		userLog();
 
 		return () => {
 			clearInterval(fetchIntervalRef.current);
@@ -120,6 +126,7 @@ export default function PrivateChatScreen({ route, navigation }) {
 					}
 				);
 
+
 				if (response.status === 200) {
 					const newMessage = {
 						Mensagem: message.trim(),
@@ -144,33 +151,87 @@ export default function PrivateChatScreen({ route, navigation }) {
 		}
 	};
 
+
+	/*FUNÇÃO PARA BUSCAR DADOS DO USUÁRIO LOGADO*/
+    const userLog = async () => {
+        try {
+            const token = await AsyncStorage.getItem('token');
+            if (!token) {
+                throw new Error('Token não encontrado. Por favor, faça login novamente.');
+            }
+            
+            const response = await axios.get('https://localhost:7140/getperfil', {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+    
+            const user = response.data;
+
+            console.log(user);
+    
+            if (user && user.Id_Usuario !== undefined && user.Nivel_Acesso !== undefined) {
+                setMyId(user.Id_Usuario);
+                setNivelDeAcesso(user.Nivel_Acesso);
+            } else {
+                throw new Error('Dados do usuário não encontrados na resposta.');
+            }
+    
+        } catch (error) {
+            console.error("Erro ao buscar usuário logado: ", error.message);
+        }
+    };
+
+
+
 	/*RENDERIZA AS MENSAGENS E ACORDO COM O ENVIO DO REMENETENTE: UserMessage ou OtherMessage */
 	const renderItem = ({ item }) => {
-		// console.log(item.EmissorId) CONSOLE PATA TESTES
-		return (
-			<View style={[styles.messageContainer, item.isSent ? styles.userMessage : styles.otherMessage]}>
-				{item.LocalizacaoMidia ? (
-					<Image 
-						source={{ uri: item.LocalizacaoMidia }}
-						style={styles.messageImage}
-					/>
-				) : null}
-				<Text style={item.isSent ? styles.userText : styles.otherText}>
-					{item.Mensagem}
-				</Text>
-				{(nivelDeAcesso === 'comum' || msg.EmissorId === myId) && (
-					<TouchableOpacity onPress={() => handlerDeleteMessage(item.Id)}>
-						<Text>excluir</Text>
-					</TouchableOpacity>
-				)}
-			</View>
-		);
+    return (
+    <View style={[styles.messageContainer, item.isSent ? styles.userMessage : styles.otherMessage]}>
+        {item.LocalizacaoMidia ? (
+        <Image 
+            source={{ uri: item.LocalizacaoMidia }}
+            style={styles.messageImage}
+        />
+        ) : null}
+        <Text style={item.isSent ? styles.userText : styles.otherText}>
+        {item.Mensagem}
+        </Text>
+        {(nivelDeAcesso === 1 || item.EmissorId === myId) && (
+        <TouchableOpacity style={styles.deleteButton} onPress={() => confirmDeleteMessage(item.MensagemId)}>
+            <Ionicons name="trash" style={styles.deleteButtonText} />
+        </TouchableOpacity>
+        )}
+    </View>
+    );
+};
+	/*FUNÇÃO PARA DELETAR MENSAGENS */
+	const confirmDeleteMessage = (messageId) => {
+		setSelectedMessageId(messageId);
+		setModalVisible(true);
 	};
 
-	/*FUNÇÃO PAR ADELETAR MENSAGENS */
-	const handlerDeleteMessage = async (userId, messageId) => {
-		await axios.delete(`https://localhost:7140/api/Chat/${userId}/${messageId}`)
-	}
+	const handlerDeleteMessage = async (messageId) => {
+		try {
+			const token = await AsyncStorage.getItem('token');
+			if (!token) {
+				throw new Error('Token não encontrado. Por favor, faça login novamente.');
+			}
+
+			await axios.delete(`https://localhost:7140/api/Chat/${messageId}`, {
+				headers: {
+					Authorization: `Bearer ${token}`,
+				}
+			});
+
+			// Remove a mensagem excluída do estado de mensagens
+			setMessages((prevMessages) => prevMessages.filter((msg) => msg.MensagemId !== messageId));
+		} catch (error) {
+			Alert.alert('Erro', error.message || 'Não foi possível excluir a mensagem.');
+		}
+	};
+	
 
 	const keyExtractor = (item) => {
 		return item.Timestamp instanceof Date && !isNaN(item.Timestamp.getTime()) 
@@ -213,9 +274,38 @@ export default function PrivateChatScreen({ route, navigation }) {
 					placeholderTextColor={colors.border}
 				/>
 				<TouchableOpacity onPress={handleSendMessage}>
-					<Ionicons name="send" size={24} color={colors.text} />
+					<Ionicons name="send" size={10} color={colors.text} />
 				</TouchableOpacity>
 			</View>
+
+			{/* Modal de confirmação de exclusão */}
+			<Modal
+				animationType="slide"
+				transparent={true}
+				visible={modalVisible}
+				onRequestClose={() => {
+					setModalVisible(!modalVisible);
+				}}>
+				<View style={styles.modalView}>
+					<Text style={styles.modalText}>Tem certeza que deseja excluir esta mensagem?</Text>
+					<View style={styles.modalButtons}>
+						<TouchableOpacity
+							style={[styles.button, styles.buttonDelete]}
+							onPress={() => {
+								handlerDeleteMessage(selectedMessageId);
+								setModalVisible(false);
+							}}>
+							<Text style={styles.buttonText}>Excluir</Text>
+						</TouchableOpacity>
+						<TouchableOpacity
+							style={[styles.button, styles.buttonCancel]}
+							onPress={() => setModalVisible(false)}>
+							<Text style={styles.buttonText}>Cancelar</Text>
+						</TouchableOpacity>
+					</View>
+				</View>
+			</Modal>
+
 		</KeyboardAvoidingView>
 	);
 }
@@ -251,10 +341,14 @@ const styles = StyleSheet.create({
 	userMessage: {
 		backgroundColor: colors.secondary,
 		alignSelf: 'flex-start',
+		display: 'flex',
+		flexDirection: 'row'
 	},
 	otherMessage: {
 		backgroundColor: colors.border,
 		alignSelf: 'flex-end',
+		display: 'flex',
+		flexDirection: 'row'
 	},
 	messageImage: {
 		width: 200,
@@ -283,6 +377,57 @@ const styles = StyleSheet.create({
 	},
 	backButton: {
 		marginRight: 10,
+	},
+	deleteButtonText: {
+        marginLeft: 'auto',
+        color: colors.text,
+        fontSize: 10,
+        fontWeight: 'bold'
+    },
+	deleteButton: {
+		marginLeft:20,
+		marginTop: 5
+	},
+	modalView: {
+		marginTop: 200,
+		backgroundColor: 'white',
+		borderRadius: 20,
+		padding: 35,
+		alignItems: 'center',
+		shadowColor: '#000',
+		shadowOffset: {
+			width: 0,
+			height: 2,
+		},
+		shadowOpacity: 0.25,
+		shadowRadius: 4,
+		elevation: 5,
+	},
+	modalButtons: {
+		display: 'flex',
+        flexDirection: 'row',
+	},
+	modalText: {
+		marginBottom: 15,
+		textAlign: 'center',
+	},
+	buttonContainer: {
+		flexDirection: 'row',
+		justifyContent: 'space-between',
+		width: '100%',
+	},
+	button: {
+		width: 100,
+		borderRadius: 10,
+		padding: 10,
+		elevation: 2,
+		backgroundColor: colors.primary,
+		flex: 1,
+		marginHorizontal: 5,
+	},
+	buttonText: {
+		color: 'white',
+		textAlign: 'center',
 	},
 });
 

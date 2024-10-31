@@ -104,7 +104,7 @@ export default function PostScreen() {
             </View>
 
             <ScrollView contentContainerStyle={styles.scrollViewContent}>
-                <Text style={styles.title}>Criar Novo Post</Text>
+                <Text style={styles.subTitle}>Criar Novo Post</Text>
 
                 <TouchableOpacity style={styles.imagePickerButton} onPress={pickFileWeb}>
                     <Text style={styles.imagePickerText}>Escolher Imagem</Text>
@@ -159,6 +159,14 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         fontSize: 26,
         color: colors.text,
+        fontWeight: '700',
+        fontFamily: 'Noto Serif',
+    },
+    subTitle: {
+        marginTop: 20,
+        textAlign: 'center',
+        fontSize: 26,
+        color: colors.primary,
         fontWeight: '700',
         fontFamily: 'Noto Serif',
     },
