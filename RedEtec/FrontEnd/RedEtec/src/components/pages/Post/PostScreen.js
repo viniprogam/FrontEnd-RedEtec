@@ -166,9 +166,7 @@ const styles = StyleSheet.create({
         marginTop: 20,
         textAlign: 'center',
         fontSize: 26,
-        color: colors.primary,
-        fontWeight: '700',
-        fontFamily: 'Noto Serif',
+        fontWeight: 'bold',
     },
     scrollViewContent: {
         flexGrow: 1,

@@ -4,12 +4,8 @@ import { useNavigation, useRoute } from "@react-navigation/native";
 import { RadioButton } from 'react-native-paper';
 import axios from 'axios';
 import { Calendar, LocaleConfig } from "react-native-calendars";
-<<<<<<< HEAD
 import { ptBR } from "../../utils/localeCalendarConfig";
-=======
-import { ptBR } from "../.././utils/localeCalendarConfig";
 import { Feather } from "@expo/vector-icons";
->>>>>>> 08bd1398ec9bf8a0bc2aa5ecd7595485b0172f11
 
 LocaleConfig.locales["pt-br"] = ptBR;
 LocaleConfig.defaultLocale = "pt-br"

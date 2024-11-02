@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         padding: 10,
-        backgroundColor: colors.secondary,
+        backgroundColor: colors.primary,
         flex: 1,
     },
     userAvatar: {

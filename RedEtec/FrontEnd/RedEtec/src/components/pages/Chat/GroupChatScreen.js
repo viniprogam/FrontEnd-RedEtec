@@ -1,5 +1,5 @@
 // src/pages/Chat/GroupChatScreen.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
     View, 
     Text, 
@@ -14,6 +14,7 @@ import {
     Platform 
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons'; // Importando ícones
+import avatar from '../../../../assets/perfil.png'
 
 const colors = {
     primary: '#040915',
@@ -21,17 +22,34 @@ const colors = {
     background: '#F4F4F4',
     text: '#FFFFFF',
     border: '#8A8F9E',
-    messageUser: '#d1ffd1',
+    messageUser: '#8A8F9E',
     messageOther: '#f1f1f1',
     modalBackground: 'rgba(0, 0, 0, 0.5)',
     modalContent: '#FFFFFF',
 };
 
-export default function GroupChatScreen({ route, navigation }) { // Adicionado navigation
-    const { conversation } = route.params;
+const dummyConversation = {
+    avatar: { uri: avatar },
+    name: 'Grupo de Teste',
+    description: 'Este é um grupo de teste para fins de demonstração.',
+    members: ['Usuário 1', 'Usuário 2', 'Usuário 3'],
+    messages: [
+        { text: 'Olá, pessoal!', sender: 'user' },
+        { text: 'Oi! Tudo bem?', sender: 'other' },
+        { text: 'Tudo ótimo, e você?', sender: 'user' },
+    ],
+};
+
+export default function GroupChatScreen({ route, navigation }) {
     const [message, setMessage] = useState('');
-    const [messages, setMessages] = useState([]);
+    const [messages, setMessages] = useState(dummyConversation.messages);
     const [isModalVisible, setIsModalVisible] = useState(false);
+    const [isGroupInfoVisible, setIsGroupInfoVisible] = useState(false);
+
+    useEffect(() => {
+        // Simular carregamento das mensagens do servidor
+        setMessages(dummyConversation.messages);
+    }, []);
 
     const handleSendMessage = () => {
         if (message.trim()) {
@@ -74,11 +92,13 @@ export default function GroupChatScreen({ route, navigation }) { // Adicionado n
                 </TouchableOpacity>
                 {/* Imagem do Grupo */}
                 <Image 
-                    source={conversation.avatar} 
+                    source={dummyConversation.avatar} 
                     style={styles.avatarHeader} 
                 />
-                {/* Nome da Conversa */}
-                <Text style={styles.nameUser}>{conversation.name}</Text>
+                {/* Nome da Conversa com funcionalidade de clique */}
+                <TouchableOpacity onPress={() => setIsGroupInfoVisible(true)} style={styles.nameContainer}>
+                    <Text style={styles.nameUser}>{dummyConversation.name}</Text>
+                </TouchableOpacity>
                 {/* Botão de Opções */}
                 <TouchableOpacity 
                     style={styles.optionsButton} 
@@ -141,9 +161,38 @@ export default function GroupChatScreen({ route, navigation }) { // Adicionado n
                             onPress={handleDeleteConversation}
                         >
                             <Ionicons name="trash" size={20} color="#FF3B30" style={{ marginRight: 10 }} />
-                            <Text style={styles.modalOptionText}>Apagar Conversa</Text>
+                            <Text style={styles.modalOptionText}>Sair da comunidade</Text>
                         </TouchableOpacity>
                         {/* Adicione mais opções aqui, se necessário */}
+                    </View>
+                </TouchableOpacity>
+            </Modal>
+
+            {/* Modal de Informações do Grupo */}
+            <Modal
+                transparent={true}
+                visible={isGroupInfoVisible}
+                animationType="slide"
+                onRequestClose={() => setIsGroupInfoVisible(false)}
+            >
+                <TouchableOpacity 
+                    style={styles.modalOverlay} 
+                    activeOpacity={1} 
+                    onPressOut={() => setIsGroupInfoVisible(false)}
+                >
+                    <View style={styles.modalContent}>
+                        <Text style={styles.modalTitle}>{dummyConversation.name}</Text>
+                        <Text style={styles.modalDescription}>{dummyConversation.description}</Text>
+                        <Text style={styles.modalMembersTitle}>Integrantes:</Text>
+                        {dummyConversation.members.map((member, index) => (
+                            <Text key={index} style={styles.modalMember}>{member}</Text>
+                        ))}
+                        <TouchableOpacity 
+                            style={styles.closeButton} 
+                            onPress={() => setIsGroupInfoVisible(false)}
+                        >
+                            <Text style={styles.closeButtonText}>Fechar</Text>
+                        </TouchableOpacity>
                     </View>
                 </TouchableOpacity>
             </Modal>
@@ -157,18 +206,13 @@ const styles = StyleSheet.create({
         backgroundColor: colors.background,
     },
     header: {
-        height: 110,
+        height: 80,
         backgroundColor: colors.secondary,
         flexDirection: 'row',
-        alignItems: 'flex-end', // Alinha verticalmente os itens no final
+        alignItems: 'center', // Alinhando verticalmente os itens no centro
         paddingHorizontal: 15,
         paddingVertical: 10,
         justifyContent: 'space-between',
-        elevation: 4, // Adiciona sombra no Android
-        shadowColor: '#000', // Cor da sombra no iOS
-        shadowOffset: { width: 0, height: 1 }, // Deslocamento da sombra no iOS
-        shadowOpacity: 0.2, // Opacidade da sombra no iOS
-        shadowRadius: 3, // Raio da sombra no iOS
     },
     backButton: {
         padding: 5,
@@ -177,19 +221,22 @@ const styles = StyleSheet.create({
         width: 50,
         height: 50,
         borderRadius: 25,
+        marginLeft: 10, // Adiciona uma margem para a esquerda
+    },
+    nameContainer: {
+        flex: 1,
+        marginLeft: 10, // Adiciona uma margem à esquerda da caixa de texto
+        justifyContent: 'center', // Centraliza verticalmente o texto
     },
     nameUser: {
-        flex: 1,
-        marginLeft: 15,
         fontSize: 20,
         color: colors.text,
         fontWeight: '700',
         fontFamily: 'Noto Serif',
-        paddingVertical: 15,
+        paddingVertical: 5,
     },
     optionsButton: {
         padding: 5,
-        paddingVertical: 15,
     },
     messageContainer: {
         flex: 1,
@@ -218,46 +265,72 @@ const styles = StyleSheet.create({
     },
     inputContainer: {
         flexDirection: 'row',
-        alignItems: 'center',
         padding: 10,
+        backgroundColor: colors.secondary,
+        borderTopWidth: 1,
         borderTopColor: colors.border,
-        borderTopWidth: 0.5,
-        backgroundColor: '#fff',
     },
     input: {
         flex: 1,
-        height: 40,
-        borderColor: colors.border,
-        borderWidth: 1,
+        backgroundColor: '#FFFFFF',
         borderRadius: 20,
         paddingHorizontal: 15,
-        fontSize: 16,
-        color: colors.primary,
+        marginRight: 10,
     },
     sendButton: {
-        marginLeft: 10,
-        backgroundColor: colors.primary,
-        padding: 10,
-        borderRadius: 20,
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     modalOverlay: {
         flex: 1,
         backgroundColor: colors.modalBackground,
-        justifyContent: 'flex-end',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     modalContent: {
         backgroundColor: colors.modalContent,
         padding: 20,
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
+        borderRadius: 10,
+        width: '80%',
+        alignItems: 'center',
     },
     modalOption: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingVertical: 10,
+        padding: 15,
+        width: '100%',
     },
     modalOptionText: {
         fontSize: 16,
-        color: '#FF3B30',
+    },
+    modalTitle: {
+        fontSize: 22,
+        fontWeight: 'bold',
+        marginBottom: 10,
+    },
+    modalDescription: {
+        fontSize: 16,
+        marginBottom: 10,
+    },
+    modalMembersTitle: {
+        fontSize: 18,
+        fontWeight: 'bold',
+        marginTop: 10,
+        marginBottom: 5,
+    },
+    modalMember: {
+        fontSize: 16,
+        marginBottom: 5,
+    },
+    closeButton: {
+        marginTop: 15,
+        paddingVertical: 10,
+        paddingHorizontal: 20,
+        backgroundColor: colors.primary,
+        borderRadius: 5,
+    },
+    closeButtonText: {
+        color: colors.text,
+        fontWeight: 'bold',
     },
 });

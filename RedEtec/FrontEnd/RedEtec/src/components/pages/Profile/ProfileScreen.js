@@ -3,6 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput, Modal, Button } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useUserProfile } from '../../context/UserProfileContext';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 const colors = {
     primary: '#040915',
@@ -16,6 +19,53 @@ export default function ProfileScreen() {
     const { profile, setProfile } = useUserProfile();
     const [editModalVisible, setEditModalVisible] = useState(false);
     const [newUsername, setNewUsername] = useState(profile.username);
+
+    /*DADOS DO USUÁRIO LOGADO */
+    const [nivelDeAcesso, setNivelDeAcesso] = useState(null);
+    const [myId, setMyId] = useState(null);
+    const [myUsername, setMyUsername] = useState(null);
+
+
+    /*FUNÇÃO PARA BUSCAR DADOS DO USUÁRIO LOGADO*/
+    const userLog = async () => {
+        try {
+            const token = await AsyncStorage.getItem('token');
+            if (!token) {
+                throw new Error('Token não encontrado. Por favor, faça login novamente.');
+            }
+            
+            const response = await axios.get('https://localhost:7140/getperfil', {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+    
+            const user = response.data;
+
+            console.log(user);
+    
+            if (user && user.Id_Usuario !== undefined && user.Nivel_Acesso !== undefined) {
+                setMyId(user.Id_Usuario);
+                setNivelDeAcesso(user.Nivel_Acesso);
+                setMyUsername(user.Nome_Usuario)
+            } else {
+                throw new Error('Dados do usuário não encontrados na resposta.');
+            }
+    
+        } catch (error) {
+            console.error("Erro ao buscar usuário logado: ", error.message);
+        }
+    };
+
+    useEffect(() => {
+        userLog();
+    })
+
+
+
+
+
 
     const handleEditProfile = () => {
         setProfile(prevProfile => ({
@@ -63,7 +113,7 @@ export default function ProfileScreen() {
                             source={{ uri: profile.profileImage }}
                         />
                     </TouchableOpacity>
-                    <Text style={styles.username}>{profile.username}</Text>
+                    <Text style={styles.username}>{myUsername}</Text>
                 </View>
                 <View style={styles.infoContainer}>
                     <View style={styles.followInfoContainer}>

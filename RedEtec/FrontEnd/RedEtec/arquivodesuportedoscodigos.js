@@ -1,187 +1,153 @@
-// import React, { useEffect, useState, useCallback } from "react";
-// import { View, Text, StyleSheet, Image, ScrollView, ActivityIndicator, Alert, TouchableOpacity, Modal, Pressable } from "react-native";
-// import axios from 'axios';
-// import { useFocusEffect } from '@react-navigation/native';
-// import Feather from 'react-native-vector-icons/Feather';
-// import AsyncStorage from '@react-native-async-storage/async-storage';
+// // src/pages/Chat/GroupChatScreen.js
+// import React, { useState } from 'react';
+// import { 
+//     View, 
+//     Text, 
+//     StyleSheet, 
+//     TextInput, 
+//     TouchableOpacity, 
+//     ScrollView, 
+//     Image, 
+//     Modal, 
+//     Alert, 
+//     KeyboardAvoidingView, 
+//     Platform 
+// } from 'react-native';
+// import { Ionicons } from '@expo/vector-icons'; // Importando ícones
 
 // const colors = {
 //     primary: '#040915',
 //     secondary: '#1E2A38',
 //     background: '#F4F4F4',
 //     text: '#FFFFFF',
-//     border: '#8A8F9E'
+//     border: '#8A8F9E',
+//     messageUser: '#d1ffd1',
+//     messageOther: '#f1f1f1',
+//     modalBackground: 'rgba(0, 0, 0, 0.5)',
+//     modalContent: '#FFFFFF',
 // };
 
-// export default function HomeScreen() {
-//     const [posts, setPosts] = useState([]);
-//     const [loading, setLoading] = useState(true);
-//     const [nivelDeAcesso, setNivelDeAcesso] = useState(null);
-//     const [userId, setUserId] = useState(null);
+// export default function GroupChatScreen({ route, navigation }) { // Adicionado navigation
+//     const { conversation } = route.params;
+//     const [message, setMessage] = useState('');
+//     const [messages, setMessages] = useState([]);
+//     const [isModalVisible, setIsModalVisible] = useState(false);
 
-//     const [modalVisible, setModalVisible] = useState(false);
-//     const [selectedPostId, setSelectedPostId] = useState(null);
-
-//     /*FUNÇÃO PARA CARREGAR OS POST */
-//     const fetchPosts = async () => {
-//         setLoading(true);
-//         try {
-//             const response = await axios.get('https://localhost:7140/api/Postagem/postagens');
-//             if (response.data && Array.isArray(response.data)) {
-//                 setPosts(response.data);
-//             } else {
-//                 console.error("Data is not an array:", response.data);
-//             }
-//             console.log(response.data);
-//         } catch (error) {
-//             console.error("Erro ao buscar postagens:", error);
-//         } finally {
-//             setLoading(false);
+//     const handleSendMessage = () => {
+//         if (message.trim()) {
+//             setMessages([...messages, { text: message, sender: 'user' }]);
+//             setMessage('');
 //         }
 //     };
 
-//     /*FUNÇÃO PARA DELETAR POSTS*/
-//     const handlerDeletePost = async () => {
-//         try {
-//             await axios.delete(`https://localhost:7140/api/Postagem/${selectedPostId}`);
-//             fetchPosts();
-//             Alert.alert("Postagem deletada com sucesso");
-//             setModalVisible(false);
-//         } catch (error) {
-//             console.error("Erro ao deletar postagem:", error);
-//         }
-//     };
-
-//     /*FUNÇÃO PARA BUSCAR DADOS DO USUÁRIO LOGADO*/
-//     const userLog = async () => {
-//         try {
-//             const token = await AsyncStorage.getItem('token');
-//             if (!token) {
-//                 throw new Error('Token não encontrado. Por favor, faça login novamente.');
-//             }
-            
-//             const response = await axios.get('https://localhost:7140/getperfil', {
-//                 headers: {
-//                     Authorization: `Bearer ${token}`,
-//                     'Content-Type': 'application/json',
+//     const handleDeleteConversation = () => {
+//         Alert.alert(
+//             'Confirmar',
+//             'Você tem certeza que deseja apagar esta conversa?',
+//             [
+//                 { text: 'Cancelar', style: 'cancel' },
+//                 { 
+//                     text: 'Apagar', 
+//                     style: 'destructive', 
+//                     onPress: () => {
+//                         setMessages([]); // Limpa as mensagens
+//                         Alert.alert('Conversa Apagada', 'A conversa foi apagada com sucesso.');
+//                         navigation.goBack(); // Navega de volta para a tela anterior
+//                     }
 //                 },
-//             });
-    
-//             const user = response.data;
-
-//             console.log(user);
-    
-//             if (user && user.Id_Usuario !== undefined && user.Nivel_Acesso !== undefined) {
-//                 setUserId(user.Id_Usuario);
-//                 setNivelDeAcesso(user.Nivel_Acesso);
-//             } else {
-//                 throw new Error('Dados do usuário não encontrados na resposta.');
-//             }
-    
-//         } catch (error) {
-//             console.error("Erro ao buscar usuário logado: ", error.message);
-//         }
-//     };
-//     console.log(nivelDeAcesso)
-
-//     /*CHAMA A FUNÇÃO DE CARREGAR POST TODA VEZ QUE A TELA HOMESCREEN É ACESSADA */
-//     useFocusEffect(
-//         useCallback(() => {
-//             fetchPosts();
-//             userLog();
-//         }, []),
-//     );
-
-//     /* VIEW DE RENDERIZAÇÃO DOS POST EXIBE UM LOADING NA TELA ATE CARREGAR OS POSTS */
-//     if (loading) {
-//         return (
-//             <View style={styles.loadingContainer}>
-//                 <ActivityIndicator size="large" color={colors.primary} />
-//             </View>
+//             ]
 //         );
-//     }
-
-//     /*FUNÇÃO PARA ABRIR A CONFIRMAÇÃO DE DELETAR */
-//     const openDeleteConfirmation = (postId) => {
-//         setSelectedPostId(postId);
-//         setModalVisible(true);
+//         setIsModalVisible(false);
 //     };
 
 //     return (
-//         <View style={styles.container}>
-//             <View style={styles.headerContainer}>
-//                 <View style={styles.logoContainer}>
-//                     <Image
-//                         source={require('../../../../assets/LogoWhite.png')}
-//                         style={styles.logo}
-//                         resizeMode="contain"
-//                     />
-//                 </View>
-//                 <View style={styles.titleContainer}>
-//                     <Text style={styles.title}>RedEtec</Text>
-//                 </View>
+//         <KeyboardAvoidingView 
+//             style={styles.container} 
+//             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+//             keyboardVerticalOffset={0} // Ajuste este valor conforme necessário
+//         >
+//             {/* Cabeçalho */}
+//             <View style={styles.header}>
+//                 {/* Botão de Voltar */}
+//                 <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+//                     <Ionicons name="arrow-back" size={24} color={colors.text} />
+//                 </TouchableOpacity>
+//                 {/* Imagem do Grupo */}
+//                 <Image 
+//                     source={conversation.avatar} 
+//                     style={styles.avatarHeader} 
+//                 />
+//                 {/* Nome da Conversa */}
+//                 <Text style={styles.nameUser}>{conversation.name}</Text>
+//                 {/* Botão de Opções */}
+//                 <TouchableOpacity 
+//                     style={styles.optionsButton} 
+//                     onPress={() => setIsModalVisible(true)}
+//                 >
+//                     <Ionicons name="ellipsis-vertical" size={24} color={colors.text} />
+//                 </TouchableOpacity>
 //             </View>
 
-//             <ScrollView contentContainerStyle={styles.postContainer}>
-//                 {posts.map((post, index) => (
-//                     <View key={index} style={styles.post}>
-//                         <View style={styles.postHeader}>
-//                             <Image
-//                                 style={styles.userAvatar}
-//                                 source={require('../../../../assets/perfil.png')} // Exibe a imagem ou um placeholder
-//                             />
-//                             <Text style={styles.userName}>{post.Nome_Usuario}</Text>
-
-//                             <View style={{ flex: 1 }} />
-
-//                             {(nivelDeAcesso === 1 || post.Id_Usuario === userId) && (
-//                                 <TouchableOpacity onPress={() => openDeleteConfirmation(post.Id_Postagem)} style={styles.deleteButton}>
-//                                     {/* <Text style={styles.deleteButtonText}>x</Text> */}
-//                                     <Feather name="more-vertical" size={24} style={styles.deleteButtonText} />
-//                                 </TouchableOpacity>
-//                             )}
-
-//                         </View>
-//                         <Image
-//                             style={styles.imgPost}
-//                             source={{ uri: `https://localhost:7140/api/Postagem/imagem/${post.imageUrl}`}}
-//                         />
-//                         <View style={styles.postFooter}>
-//                             <Text style={styles.postDescription}>{post.Legenda_Postagem}</Text>
-//                         </View>
+//             {/* Lista de Mensagens */}
+//             <ScrollView 
+//                 style={styles.messageContainer} 
+//                 contentContainerStyle={{ paddingVertical: 10 }}
+//                 showsVerticalScrollIndicator={false}
+//             >
+//                 {messages.map((msg, index) => (
+//                     <View
+//                         key={index}
+//                         style={[
+//                             styles.message, 
+//                             msg.sender === 'user' ? styles.userMessage : styles.otherMessage
+//                         ]}
+//                     >
+//                         <Text style={msg.sender === 'user' ? styles.userText : styles.otherText}>
+//                             {msg.text}
+//                         </Text>
 //                     </View>
 //                 ))}
 //             </ScrollView>
 
-//                 {/* Modal de confirmação de deleção */}
-//             <Modal
-//                 animationType="slide"
-//                 transparent={true}
-//                 visible={modalVisible}
-//                 onRequestClose={() => setModalVisible(false)}
-//             >
-//                 <View style={styles.modalOverlay}>
-//                     <View style={styles.modalView}>
-//                         <Text style={styles.modalText}>Deseja realmente deletar esta postagem?</Text>
-//                         <View style={styles.modalButtons}>
-//                             <Pressable
-//                                 style={[styles.button, styles.buttonCancel]}
-//                                 onPress={() => setModalVisible(false)}
-//                             >
-//                                 <Text style={styles.buttonText}>Cancelar</Text>
-//                             </Pressable>
-//                             <Pressable
-//                                 style={[styles.button, styles.buttonDelete]}
-//                                 onPress={handlerDeletePost}
-//                             >
-//                                 <Text style={styles.buttonText}>Deletar</Text>
-//                             </Pressable>
-//                         </View>
-//                     </View>
-//                 </View>
-//             </Modal>
+//             {/* Input de Mensagem */}
+//             <View style={styles.inputContainer}>
+//                 <TextInput
+//                     style={styles.input}
+//                     value={message}
+//                     onChangeText={setMessage}
+//                     placeholder="Digite uma mensagem"
+//                     placeholderTextColor="#8A8F9E"
+//                 />
+//                 <TouchableOpacity style={styles.sendButton} onPress={handleSendMessage}>
+//                     <Ionicons name="send" size={24} color={colors.text} />
+//                 </TouchableOpacity>
+//             </View>
 
-//         </View>
+//             {/* Modal de Opções */}
+//             <Modal
+//                 transparent={true}
+//                 visible={isModalVisible}
+//                 animationType="fade"
+//                 onRequestClose={() => setIsModalVisible(false)}
+//             >
+//                 <TouchableOpacity 
+//                     style={styles.modalOverlay} 
+//                     activeOpacity={1} 
+//                     onPressOut={() => setIsModalVisible(false)}
+//                 >
+//                     <View style={styles.modalContent}>
+//                         <TouchableOpacity 
+//                             style={styles.modalOption} 
+//                             onPress={handleDeleteConversation}
+//                         >
+//                             <Ionicons name="trash" size={20} color="#FF3B30" style={{ marginRight: 10 }} />
+//                             <Text style={styles.modalOptionText}>Apagar Conversa</Text>
+//                         </TouchableOpacity>
+//                         {/* Adicione mais opções aqui, se necessário */}
+//                     </View>
+//                 </TouchableOpacity>
+//             </Modal>
+//         </KeyboardAvoidingView>
 //     );
 // }
 
@@ -190,143 +156,108 @@
 //         flex: 1,
 //         backgroundColor: colors.background,
 //     },
-//     headerContainer: {
+//     header: {
 //         height: 110,
 //         backgroundColor: colors.secondary,
-//         justifyContent: 'center',
-//         alignItems: 'center',
+//         flexDirection: 'row',
+//         alignItems: 'flex-end', // Alinha verticalmente os itens no final
+//         paddingHorizontal: 15,
+//         paddingVertical: 10,
+//         justifyContent: 'space-between',
+//         elevation: 4, // Adiciona sombra no Android
+//         shadowColor: '#000', // Cor da sombra no iOS
+//         shadowOffset: { width: 0, height: 1 }, // Deslocamento da sombra no iOS
+//         shadowOpacity: 0.2, // Opacidade da sombra no iOS
+//         shadowRadius: 3, // Raio da sombra no iOS
 //     },
-//     logoContainer: {
-//         position: 'absolute',
-//         top: 40,
-//         left: 20,
+//     backButton: {
+//         padding: 5,
 //     },
-//     logo: {
+//     avatarHeader: {
 //         width: 50,
 //         height: 50,
+//         borderRadius: 25,
 //     },
-//     titleContainer: {
-//         alignItems: 'center',
-//         justifyContent: 'center',
-//     },
-//     title: {
-//         marginTop: 20,
-//         textAlign: 'center',
-//         fontSize: 26,
+//     nameUser: {
+//         flex: 1,
+//         marginLeft: 15,
+//         fontSize: 20,
 //         color: colors.text,
 //         fontWeight: '700',
 //         fontFamily: 'Noto Serif',
+//         paddingVertical: 15,
 //     },
-//     postContainer: {
-//         paddingVertical: 10,
+//     optionsButton: {
+//         padding: 5,
+//         paddingVertical: 15,
 //     },
-//     post: {
-//         marginBottom: 20,
-//         backgroundColor: '#fff',
+//     messageContainer: {
+//         flex: 1,
+//         paddingHorizontal: 15,
+//         backgroundColor: colors.background,
+//     },
+//     message: {
+//         padding: 10,
 //         borderRadius: 10,
-//         overflow: 'hidden',
-//         borderColor: colors.border,
-//         borderWidth: 1,
-//         marginVertical: 10,
-//         marginHorizontal: 5,
+//         marginVertical: 5,
+//         maxWidth: '80%',
 //     },
-//     postHeader: {
+//     userMessage: {
+//         backgroundColor: colors.messageUser,
+//         alignSelf: 'flex-end',
+//     },
+//     otherMessage: {
+//         backgroundColor: colors.messageOther,
+//         alignSelf: 'flex-start',
+//     },
+//     userText: {
+//         color: colors.primary,
+//     },
+//     otherText: {
+//         color: '#000',
+//     },
+//     inputContainer: {
 //         flexDirection: 'row',
 //         alignItems: 'center',
 //         padding: 10,
-//         backgroundColor: colors.secondary,
+//         borderTopColor: colors.border,
+//         borderTopWidth: 0.5,
+//         backgroundColor: '#fff',
+//     },
+//     input: {
 //         flex: 1,
-//     },
-//     userAvatar: {
-//         width: 40,
 //         height: 40,
+//         borderColor: colors.border,
+//         borderWidth: 1,
 //         borderRadius: 20,
-//         marginRight: 10,
-//     },
-//     userName: {
+//         paddingHorizontal: 15,
 //         fontSize: 16,
-//         fontWeight: 'bold',
-//         color: colors.text,
-//     },
-//     optionsButton: {
-//         marginLeft: 'auto',
-//         padding: 10,
-//     },
-//     imgPost: {
-//         width: '100%',
-//         height: 400,
-//         backgroundColor: colors.border,
-//     },
-//     postFooter: {
-//         padding: 10,
-//     },
-//     postDescription: {
-//         fontSize: 14,
 //         color: colors.primary,
 //     },
-//     loadingContainer: {
-//         flex: 1,
-//         justifyContent: 'center',
-//         alignItems: 'center',
+//     sendButton: {
+//         marginLeft: 10,
+//         backgroundColor: colors.primary,
+//         padding: 10,
+//         borderRadius: 20,
 //     },
 //     modalOverlay: {
 //         flex: 1,
-//         justifyContent: 'center',
-//         alignItems: 'center',
-//         backgroundColor: 'rgba(0, 0, 0, 0.5)',
+//         backgroundColor: colors.modalBackground,
+//         justifyContent: 'flex-end',
 //     },
-//     modalView: {
-//         margin: 20,
-//         backgroundColor: 'white',
-//         borderRadius: 10,
-//         padding: 35,
-//         alignItems: 'center',
-//         shadowColor: '#000',
-//         shadowOffset: {
-//             width: 0,
-//             height: 2,
-//         },
-//         shadowOpacity: 0.25,
-//         shadowRadius: 4,
-//         elevation: 5,
+//     modalContent: {
+//         backgroundColor: colors.modalContent,
+//         padding: 20,
+//         borderTopLeftRadius: 20,
+//         borderTopRightRadius: 20,
 //     },
-//     modalText: {
-//         marginBottom: 15,
-//         textAlign: 'center',
-//         fontSize: 24,
-//         fontWeight: 'ultralight',
-//         color: colors.primary,
-//     },
-//     modalButtons: {
+//     modalOption: {
 //         flexDirection: 'row',
-//         justifyContent: 'space-between',
-//         width: '100%',
+//         alignItems: 'center',
+//         paddingVertical: 10,
 //     },
-//     button: {
-//         borderRadius: 5,
-//         padding: 10,
-//         elevation: 2,
-//         marginHorizontal: 10,
-//         width: '40%',
-//     },
-//     buttonDelete: {
-//         backgroundColor: colors.primary,
-//     },
-//     buttonCancel: {
-//         backgroundColor: colors.border,
-//     },
-//     buttonText: {
-//         color: 'white',
-//         textAlign: 'center',
-//     },
-//     deleteButton: {
-//         padding: 2,
-//         margin: 0
-//     },
-//     deleteButtonText: {
-//         marginLeft: 'auto',
-//         color: colors.text,
-//         fontSize: 24,
-//         fontWeight: 'bold'
+//     modalOptionText: {
+//         fontSize: 16,
+//         color: '#FF3B30',
 //     },
 // });

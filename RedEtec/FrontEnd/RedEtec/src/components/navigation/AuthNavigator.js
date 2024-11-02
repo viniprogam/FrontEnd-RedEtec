@@ -2,6 +2,7 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import SingInToken from '../pages/Auth/SingInToken';
+// import GroupChatScreen from '../pages/Chat/GroupChatScreen';
 import LoginScreen from '../pages/Auth/LoginScreen';
 import RegisterScreenImg from '../pages/Auth/RegisterScreenImg';
 import RegisterScreen from '../pages/Auth/RegisterScreen';
@@ -15,6 +16,8 @@ export default function AuthNavigator() {
     return (
         <Stack.Navigator>
             {/* <Stack.Screen name="SingInToken" component={SingInToken} options={{ headerShown: false }} /> */}
+
+            {/* <Stack.Screen name="GroupChatScreen" component={GroupChatScreen} options={{headerShown: false}}/> */}
             
             <Stack.Screen name="LoginScreen" component={LoginScreen} options={{ headerShown: false }} />
             <Stack.Screen name="RegisterScreen" component={RegisterScreen} options={{ headerShown: false }} />
