@@ -36,6 +36,8 @@ export default function PrivateChatScreen({ route, navigation }) {
 	const [nivelDeAcesso, setNivelDeAcesso] = useState(null);
     const [myId, setMyId] = useState(null);
 
+	const [modalFileVisible, setModalFileVisible] = useState(false);
+
 	const [modalVisible, setModalVisible] = useState(false);
 	const [selectedMessageId, setSelectedMessageId] = useState(null);
 
@@ -211,6 +213,10 @@ export default function PrivateChatScreen({ route, navigation }) {
 		setSelectedMessageId(messageId);
 		setModalVisible(true);
 	};
+	/*FUNÇÃO PAR ABRIR MODAL DE ENVIAR ARQUIVOS (FOTOS, E ARQUIVOS DE DOC)  */
+	const selectFileMessage = () => {
+		setModalFileVisible(true);
+	};
 
 	const handlerDeleteMessage = async (messageId) => {
 		try {
@@ -274,7 +280,10 @@ export default function PrivateChatScreen({ route, navigation }) {
 					placeholderTextColor={colors.border}
 				/>
 				<TouchableOpacity onPress={handleSendMessage}>
-					<Ionicons name="send" size={10} color={colors.text} />
+					<Ionicons name="send" size={15} color={colors.text} />
+				</TouchableOpacity>
+				<TouchableOpacity onPress={selectFileMessage}>
+					<Ionicons name="ellipsis-vertical" size={15} color={colors.text} />
 				</TouchableOpacity>
 			</View>
 
@@ -301,6 +310,26 @@ export default function PrivateChatScreen({ route, navigation }) {
 							style={[styles.button, styles.buttonCancel]}
 							onPress={() => setModalVisible(false)}>
 							<Text style={styles.buttonText}>Cancelar</Text>
+						</TouchableOpacity>
+					</View>
+				</View>
+			</Modal>
+
+
+			{/* Modal de selecionar doc para enviar */}
+			<Modal
+				animationType="slide"
+				transparent={true}
+				visible={modalFileVisible}
+				onRequestClose={() => setModalFileVisible(false)}
+			>
+				<View style={styles.modalFileOverlay}>
+					<View style={styles.modalFileContainer}>
+						<TouchableOpacity onPress={() => setModalFileVisible(false)}>
+						<Ionicons name="image" size={24} color={colors.primary} />
+						</TouchableOpacity>
+						<TouchableOpacity onPress={() => setModalFileVisible(false)}>
+						<Ionicons name="document-text" size={24} color={colors.primary} />
 						</TouchableOpacity>
 					</View>
 				</View>
@@ -365,15 +394,21 @@ const styles = StyleSheet.create({
 	inputContainer: {
 		flexDirection: 'row',
 		alignItems: 'center',
-		backgroundColor: colors.secondary,
-		padding: 10,
+		padding: 15,
+		backgroundColor: colors.primary,
+		borderTopWidth: 1,
+		borderTopColor: colors.border
 	},
 	input: {
 		flex: 1,
-		backgroundColor: '#fff',
+		height: 50,
+		borderColor: colors.border,
+		borderWidth: 1,
 		borderRadius: 8,
-		padding: 10,
-		marginRight: 10,
+		paddingHorizontal: 10,
+		color: colors.text,
+		backgroundColor: colors.secondary,
+		marginRight: 10
 	},
 	backButton: {
 		marginRight: 10,
@@ -403,6 +438,26 @@ const styles = StyleSheet.create({
 		shadowRadius: 4,
 		elevation: 5,
 	},
+	modalFileOverlay: {
+		position: 'absolute',
+		bottom: 0,
+		left: 0,
+		marginBottom: 100,
+		width: '100%',
+		height: 'auto'
+	},
+	modalFileContainer: {
+		display: 'flex',
+		flexDirection: 'row',
+		width: 100,
+		marginBottom: 20,
+		padding: 5,
+		backgroundColor: 'white',
+		borderRadius: 10,
+		alignItems: 'center',
+        gap: 5,
+        justifyContent: 'center'
+	},
 	modalButtons: {
 		display: 'flex',
         flexDirection: 'row',
@@ -425,9 +480,17 @@ const styles = StyleSheet.create({
 		flex: 1,
 		marginHorizontal: 5,
 	},
+	buttonFile: {
+		width: 50,
+		borderRadius: 10,
+		padding: 10,
+		elevation: 2,
+		backgroundColor: colors.primary,
+		flex: 1,
+		marginHorizontal: 5,
+	},
 	buttonText: {
 		color: 'white',
 		textAlign: 'center',
 	},
 });
-

@@ -1,7 +1,7 @@
 // src/navigation/AuthNavigator.js
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import SingInToken from '../pages/Auth/SingInToken';
+// import SingInToken from '../pages/Auth/SingInToken';
 // import GroupChatScreen from '../pages/Chat/GroupChatScreen';
 import LoginScreen from '../pages/Auth/LoginScreen';
 import RegisterScreenImg from '../pages/Auth/RegisterScreenImg';

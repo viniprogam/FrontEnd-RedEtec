@@ -13,6 +13,8 @@ import {
     KeyboardAvoidingView, 
     Platform 
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
 import { Ionicons } from '@expo/vector-icons'; // Importando ícones
 import avatar from '../../../../assets/perfil.png'
 
@@ -45,6 +47,10 @@ export default function GroupChatScreen({ route, navigation }) {
     const [messages, setMessages] = useState(dummyConversation.messages);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [isGroupInfoVisible, setIsGroupInfoVisible] = useState(false);
+    const [modalFileVisible, setModalFileVisible] = useState(false);
+
+    const [file, setFile] = useState(null);
+    const [selectedImage, setSelectedImage] = useState(null);
 
     useEffect(() => {
         // Simular carregamento das mensagens do servidor
@@ -77,6 +83,49 @@ export default function GroupChatScreen({ route, navigation }) {
         );
         setIsModalVisible(false);
     };
+
+    const selectFileMessage = () => {
+		setModalFileVisible(true);
+	};
+    
+
+    const pickImage = async () => {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+            alert('Desculpe, precisamos de permissão para acessar a galeria!');
+            return;
+        }
+
+        const result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 1,
+        });
+
+        if (!result.canceled) {
+            setFile(result.assets[0]);
+            setModalFileVisible(false)
+        }
+    };
+
+    const pickDocument = async () => {
+        const result = await DocumentPicker.getDocumentAsync({
+            type: '*/*', // Aceita qualquer tipo de arquivo
+            copyToCacheDirectory: true,
+        });
+
+        // Verifica se a seleção foi bem-sucedida
+        if (result.type === 'success') {
+            console.log(result.uri); // Mostra o URI do arquivo no console
+            setFile(result.uri); // Armazena o arquivo no estado
+            
+        } else {
+            Alert.alert('Falha ao selecionar o documento.');
+            setModalFileVisible(false);
+        }
+    };
+
 
     return (
         <KeyboardAvoidingView 
@@ -122,6 +171,12 @@ export default function GroupChatScreen({ route, navigation }) {
                             msg.sender === 'user' ? styles.userMessage : styles.otherMessage
                         ]}
                     >
+                        {msg.image && (
+                            <Image
+                                source={{ uri: msg.image }}
+                                style={styles.messageImage}
+                            />
+                        )}
                         <Text style={msg.sender === 'user' ? styles.userText : styles.otherText}>
                             {msg.text}
                         </Text>
@@ -139,8 +194,11 @@ export default function GroupChatScreen({ route, navigation }) {
                     placeholderTextColor="#8A8F9E"
                 />
                 <TouchableOpacity style={styles.sendButton} onPress={handleSendMessage}>
-                    <Ionicons name="send" size={24} color={colors.text} />
+                    <Ionicons name="send" size={15} color={colors.text} />
                 </TouchableOpacity>
+                <TouchableOpacity onPress={selectFileMessage}>
+					<Ionicons name="ellipsis-vertical" size={15} color={colors.text} />
+				</TouchableOpacity>
             </View>
 
             {/* Modal de Opções */}
@@ -196,6 +254,26 @@ export default function GroupChatScreen({ route, navigation }) {
                     </View>
                 </TouchableOpacity>
             </Modal>
+
+            <Modal
+				animationType="slide"
+				transparent={true}
+				visible={modalFileVisible}
+				onRequestClose={() => setModalFileVisible(false)}
+			>
+				<View style={styles.modalFileOverlay}>
+					<View style={styles.modalFileContainer}>
+						<TouchableOpacity onPress={pickImage}>
+						<Ionicons name="image" size={24} color={colors.primary} />
+						</TouchableOpacity>
+						<TouchableOpacity onPress={pickDocument}>
+						<Ionicons name="document-text" size={24} color={colors.primary} />
+						</TouchableOpacity>
+					</View>
+				</View>
+			</Modal>
+
+
         </KeyboardAvoidingView>
     );
 }
@@ -206,7 +284,7 @@ const styles = StyleSheet.create({
         backgroundColor: colors.background,
     },
     header: {
-        height: 80,
+        height: 110,
         backgroundColor: colors.secondary,
         flexDirection: 'row',
         alignItems: 'center', // Alinhando verticalmente os itens no centro
@@ -227,6 +305,11 @@ const styles = StyleSheet.create({
         flex: 1,
         marginLeft: 10, // Adiciona uma margem à esquerda da caixa de texto
         justifyContent: 'center', // Centraliza verticalmente o texto
+    },
+    previewContainer: {
+        marginBottom: 20,
+        width: '100%',
+        height: 380,
     },
     nameUser: {
         fontSize: 20,
@@ -264,19 +347,24 @@ const styles = StyleSheet.create({
         color: '#000',
     },
     inputContainer: {
-        flexDirection: 'row',
-        padding: 10,
-        backgroundColor: colors.secondary,
-        borderTopWidth: 1,
-        borderTopColor: colors.border,
-    },
-    input: {
-        flex: 1,
-        backgroundColor: '#FFFFFF',
-        borderRadius: 20,
-        paddingHorizontal: 15,
-        marginRight: 10,
-    },
+		flexDirection: 'row',
+		alignItems: 'center',
+		padding: 15,
+		backgroundColor: colors.primary,
+		borderTopWidth: 1,
+		borderTopColor: colors.border
+	},
+	input: {
+		flex: 1,
+		height: 50,
+		borderColor: colors.border,
+		borderWidth: 1,
+		borderRadius: 8,
+		paddingHorizontal: 10,
+		color: colors.text,
+		backgroundColor: colors.secondary,
+		marginRight: 10
+	},
     sendButton: {
         justifyContent: 'center',
         alignItems: 'center',
@@ -287,6 +375,26 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
+    modalFileOverlay: {
+		position: 'absolute',
+		bottom: 0,
+		left: 0,
+		marginBottom: 100,
+		width: '100%',
+		height: 'auto'
+	},
+	modalFileContainer: {
+		display: 'flex',
+		flexDirection: 'row',
+		width: 100,
+		marginBottom: 20,
+		padding: 5,
+		backgroundColor: 'white',
+		borderRadius: 10,
+		alignItems: 'center',
+        gap: 5,
+        justifyContent: 'center'
+	},
     modalContent: {
         backgroundColor: colors.modalContent,
         padding: 20,
@@ -332,5 +440,11 @@ const styles = StyleSheet.create({
     closeButtonText: {
         color: colors.text,
         fontWeight: 'bold',
+    },
+    messageImage: {
+        width: 200,
+        height: 200,
+        borderRadius: 10,
+        marginBottom: 10,
     },
 });
