@@ -60,7 +60,7 @@ export default function HomeScreen() {
                 throw new Error('Token não encontrado. Por favor, faça login novamente.');
             }
             
-            const response = await axios.get('https://localhost:7140/getperfil', {
+            const response = await axios.get('https://localhost:7140/api/Usuario/getusuario', {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     'Content-Type': 'application/json',

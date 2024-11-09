@@ -1,11 +1,9 @@
-// ProfileScreen.js
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput, Modal, Button } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput, Modal, Button, Alert } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useUserProfile } from '../../context/UserProfileContext';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
 
 const colors = {
     primary: '#040915',
@@ -15,16 +13,42 @@ const colors = {
     border: '#8A8F9E'
 };
 
-export default function ProfileScreen() {
+export default function ProfileScreen({route, navigation}) {
     const { profile, setProfile } = useUserProfile();
     const [editModalVisible, setEditModalVisible] = useState(false);
-    const [newUsername, setNewUsername] = useState(profile.username);
+    const [newUsername, setNewUsername] = useState();
 
     /*DADOS DO USUÁRIO LOGADO */
     const [nivelDeAcesso, setNivelDeAcesso] = useState(null);
     const [myId, setMyId] = useState(null);
     const [myUsername, setMyUsername] = useState(null);
 
+    /*FUNÇÃO PARA ATUALIZAR O NOME */
+    const handleEditProfile = async () => {
+        try {
+            const token = await AsyncStorage.getItem('token');
+            if (!token) {
+                throw new Error('Token não encontrado. Por favor, faça login novamente.');
+            }
+
+            const response = await axios.put(`https://localhost:7140/api/Usuario/${myId}`, {
+                Id_Usuario: myId,
+                Nome_Usuario: newUsername,
+            }, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            Alert.alert('Sucesso', 'Nome atualizado com sucesso');
+            setEditModalVisible(false);
+            navigation.navigate('Home');
+        } catch (error) {
+            console.error(error);
+            Alert.alert('Erro', 'Houve um erro ao atualizar o nome');
+        }
+    };
 
     /*FUNÇÃO PARA BUSCAR DADOS DO USUÁRIO LOGADO*/
     const userLog = async () => {
@@ -33,18 +57,18 @@ export default function ProfileScreen() {
             if (!token) {
                 throw new Error('Token não encontrado. Por favor, faça login novamente.');
             }
-            
-            const response = await axios.get('https://localhost:7140/getperfil', {
+
+            const response = await axios.get('https://localhost:7140/api/Usuario/getusuario', {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     'Content-Type': 'application/json',
                 },
             });
-    
+
             const user = response.data;
 
             console.log(user);
-    
+
             if (user && user.Id_Usuario !== undefined && user.Nivel_Acesso !== undefined) {
                 setMyId(user.Id_Usuario);
                 setNivelDeAcesso(user.Nivel_Acesso);
@@ -52,7 +76,7 @@ export default function ProfileScreen() {
             } else {
                 throw new Error('Dados do usuário não encontrados na resposta.');
             }
-    
+
         } catch (error) {
             console.error("Erro ao buscar usuário logado: ", error.message);
         }
@@ -60,20 +84,7 @@ export default function ProfileScreen() {
 
     useEffect(() => {
         userLog();
-    })
-
-
-
-
-
-
-    const handleEditProfile = () => {
-        setProfile(prevProfile => ({
-            ...prevProfile,
-            username: newUsername
-        }));
-        setEditModalVisible(false);
-    };
+    }, []);
 
     const pickImage = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
@@ -235,38 +246,39 @@ const styles = StyleSheet.create({
     },
     editButton: {
         backgroundColor: colors.primary,
-        padding: 15,
-        borderRadius: 8,
+        paddingVertical: 10,
+        borderRadius: 5,
         alignItems: 'center',
-        marginTop: 30,
     },
     editButtonText: {
         color: colors.text,
-        fontSize: 16,
+        fontSize: 18,
         fontWeight: '600',
     },
     modalContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semitransparente para dar destaque ao modal
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
     },
     modalContent: {
-        width: '80%',
+        backgroundColor: colors.background,
         padding: 20,
-        backgroundColor: 'white',
         borderRadius: 10,
+        width: '80%',
+        alignItems: 'center',
     },
     modalTitle: {
-        fontSize: 18,
-        fontWeight: 'bold',
-        marginBottom: 10,
+        fontSize: 20,
+        fontWeight: '600',
+        marginBottom: 20,
     },
     modalInput: {
-        borderColor: colors.border,
-        borderWidth: 1,
-        borderRadius: 5,
-        padding: 10,
+        width: '100%',
+        borderBottomWidth: 1,
+        borderColor: colors.primary,
         marginBottom: 20,
+        padding: 5,
+        fontSize: 18,
     },
 });
