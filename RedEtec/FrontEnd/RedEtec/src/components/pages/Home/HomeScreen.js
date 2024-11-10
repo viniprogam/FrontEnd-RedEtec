@@ -70,6 +70,7 @@ export default function HomeScreen() {
             const user = response.data;
 
             console.log(user);
+            console.log(token);
     
             if (user && user.Id_Usuario !== undefined && user.Nivel_Acesso !== undefined) {
                 setUserId(user.Id_Usuario);
@@ -141,10 +142,12 @@ export default function HomeScreen() {
                             )}
 
                         </View>
-                        <Image
-                            style={styles.imgPost}
-                            source={{ uri: `https://localhost:7140/api/Postagem/imagem/${post.imageUrl}`}}
-                        />
+                        {post.imageUrl && (
+                            <Image
+                                style={styles.imgPost}
+                                source={{ uri: `https://localhost:7140/api/Postagem/imagem/${post.imageUrl}`}}
+                            />
+                        )}
                         <View style={styles.postFooter}>
                             <Text style={styles.postDescription}>{post.Legenda_Postagem}</Text>
                         </View>

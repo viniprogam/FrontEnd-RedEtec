@@ -48,16 +48,16 @@ export default function PostScreen() {
     };
 
     const handlePost = async () => {
-        if (!file) {
-            Alert.alert('Erro', 'Por favor, selecione uma imagem.');
+        if (!postText.trim() && !file) {
+            Alert.alert('Erro', 'Por favor, insira um texto ou selecione uma imagem.');
             return;
         }
 
         const formData = new FormData();
-        formData.append('Legenda_Postagem', postText.trim())
-        formData.append('file', file.file);
-        console.log(file.uri)
-        console.log(selectedImage)
+        formData.append('Legenda_Postagem', postText.trim());
+        if (file) {
+            formData.append('file', file.file);
+        }
 
         try {
             const token = await AsyncStorage.getItem("token");
@@ -77,6 +77,7 @@ export default function PostScreen() {
                 Alert.alert('Sucesso', 'Postagem criada com sucesso!');
                 setPostText('');
                 setSelectedImage(null);
+                setFile(null);
                 navigation.navigate('Home'); // Navegar para a HomeScreen
             } else {
                 Alert.alert('Erro', 'Houve um problema ao criar a postagem.');

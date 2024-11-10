@@ -12,23 +12,29 @@ LocaleConfig.defaultLocale = "pt-br"
 
 export default function RegisterScreen3() {
     const [Email_Usuario, setEmail_Usuario] = useState('');
-    const [Cidade_Usuario, setCidade_Usuario] = useState('qualquer');
     const [CPF_Usuario, setCPF_Usuario] = useState('');
     const [Data_Nascimento_Usuario, setData_Nascimento_Usuario] = useState('');
-    const [Nivel_Acesso, setNivel_Acesso] = useState(5);
-    const [Sexo_Usuario, setSexo_Usuario] = useState('M');
+    const [Nivel_Acesso, setNivel_Acesso] = useState(0);
     const [openCalendar, setOpenCalendar] = useState(false);
     const [errorMessage, setErrorMessage] = useState(''); // Mensagem de erro
     const [selectedDay, setSelectedDay] = useState('');
     const [selectedArea, setSelectedArea] = useState('Selecione a área'); // Área selecionada
+    const [selectedAreaId, setSelectedAreaId] = useState(null);
     const [showSelectOptions, setShowSelectOptions] = useState(false); // Controle de visibilidade do modal de opções
 
-    const areas = ['Desenvolvimento de Sistemas', 'Administração', 'Logística', 'Eletroeletrônica', 'Contabilidade'];
+    
 
     const handleAreaSelect = (area) => {
-        setSelectedArea(area);
+        setSelectedArea(area.Nome_Curso); // Atualiza o nome da área selecionada
+        setSelectedAreaId(area.Id_Curso); // Salva o ID da área selecionada
         setShowSelectOptions(false); // Esconde o menu após a seleção
     };
+
+    useEffect(() => {
+        console.log(selectedArea);  // Vai mostrar o valor atualizado de selectedArea
+        console.log(selectedAreaId);  // Vai mostrar o valor atualizado de selectedAreaId
+    }, [selectedArea, selectedAreaId]);
+    
 
 
     const navigation = useNavigation();
@@ -92,6 +98,26 @@ export default function RegisterScreen3() {
         setCPF_Usuario(formattedCpf);
     };
 
+    
+    const [communities, setCommunities] = useState([]);
+    
+
+    const getCourse = async () => {
+        try {
+            const response = await axios.get('https://localhost:7140/api/Curso')
+            setCommunities(response.data)
+            
+        }
+        catch(error) {
+            console.error(error);
+        }
+    }
+
+    useState(() => {
+        getCourse();
+    }, [])
+
+    console.log(communities)
 
 
     const handleRegister = async () => {
@@ -111,21 +137,19 @@ export default function RegisterScreen3() {
                 Nome_Usuario,
                 CPF_Usuario,
                 Data_Nascimento_Usuario,
-                Cidade_Usuario,
                 Email_Usuario,
                 Senha_Usuario,
-                Sexo_Usuario,
-                Nivel_Acesso
+                Nivel_Acesso,
+                selectedAreaId
             });
             const response = await axios.post('https://localhost:7140/api/Usuario', {
                 Nome_Usuario,
                 CPF_Usuario,
                 Data_Nascimento_Usuario: formattedDate,
-                Cidade_Usuario,
                 Email_Usuario,
                 Senha_Usuario,
-                Sexo_Usuario,
-                Nivel_Acesso
+                Nivel_Acesso,
+                Id_Curso: selectedAreaId
             });
 
             console.log('Cadastro bem-sucedido:', response.data);
@@ -230,13 +254,15 @@ export default function RegisterScreen3() {
                 <Modal visible={showSelectOptions} transparent animationType="slide">
                     <View style={styles.modalContainer}>
                         <View style={styles.modalContent}>
-                            {areas.map((area, index) => (
+                            <Text style={styles.selectTitle}>Selecione a Área</Text>
+                            {/* Renderizando cada curso da lista */}
+                            {communities.map((area, index) => (
                                 <TouchableOpacity
-                                    key={index}
+                                    key={area.Id_Curso}  // Usando Id_Curso como chave única
                                     style={styles.optionButton}
                                     onPress={() => handleAreaSelect(area)}
                                 >
-                                    <Text style={styles.optionText}>{area}</Text>
+                                    <Text style={styles.optionText}>{area.Nome_Curso}</Text>
                                 </TouchableOpacity>
                             ))}
                             <TouchableOpacity style={styles.cancelButton} onPress={() => setShowSelectOptions(false)}>

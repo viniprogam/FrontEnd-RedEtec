@@ -36,7 +36,6 @@ export default function PrivateChatScreen({ route, navigation }) {
 	const [nivelDeAcesso, setNivelDeAcesso] = useState(null);
     const [myId, setMyId] = useState(null);
 
-	const [modalFileVisible, setModalFileVisible] = useState(false);
 
 	const [modalVisible, setModalVisible] = useState(false);
 	const [selectedMessageId, setSelectedMessageId] = useState(null);
@@ -213,10 +212,6 @@ export default function PrivateChatScreen({ route, navigation }) {
 		setSelectedMessageId(messageId);
 		setModalVisible(true);
 	};
-	/*FUNÇÃO PAR ABRIR MODAL DE ENVIAR ARQUIVOS (FOTOS, E ARQUIVOS DE DOC)  */
-	const selectFileMessage = () => {
-		setModalFileVisible(true);
-	};
 
 	const handlerDeleteMessage = async (messageId) => {
 		try {
@@ -282,9 +277,6 @@ export default function PrivateChatScreen({ route, navigation }) {
 				<TouchableOpacity onPress={handleSendMessage}>
 					<Ionicons name="send" size={15} color={colors.text} />
 				</TouchableOpacity>
-				<TouchableOpacity onPress={selectFileMessage}>
-					<Ionicons name="ellipsis-vertical" size={15} color={colors.text} />
-				</TouchableOpacity>
 			</View>
 
 			{/* Modal de confirmação de exclusão */}
@@ -310,26 +302,6 @@ export default function PrivateChatScreen({ route, navigation }) {
 							style={[styles.button, styles.buttonCancel]}
 							onPress={() => setModalVisible(false)}>
 							<Text style={styles.buttonText}>Cancelar</Text>
-						</TouchableOpacity>
-					</View>
-				</View>
-			</Modal>
-
-
-			{/* Modal de selecionar doc para enviar */}
-			<Modal
-				animationType="slide"
-				transparent={true}
-				visible={modalFileVisible}
-				onRequestClose={() => setModalFileVisible(false)}
-			>
-				<View style={styles.modalFileOverlay}>
-					<View style={styles.modalFileContainer}>
-						<TouchableOpacity onPress={() => setModalFileVisible(false)}>
-						<Ionicons name="image" size={24} color={colors.primary} />
-						</TouchableOpacity>
-						<TouchableOpacity onPress={() => setModalFileVisible(false)}>
-						<Ionicons name="document-text" size={24} color={colors.primary} />
 						</TouchableOpacity>
 					</View>
 				</View>
@@ -437,14 +409,6 @@ const styles = StyleSheet.create({
 		shadowOpacity: 0.25,
 		shadowRadius: 4,
 		elevation: 5,
-	},
-	modalFileOverlay: {
-		position: 'absolute',
-		bottom: 0,
-		left: 0,
-		marginBottom: 100,
-		width: '100%',
-		height: 'auto'
 	},
 	modalFileContainer: {
 		display: 'flex',

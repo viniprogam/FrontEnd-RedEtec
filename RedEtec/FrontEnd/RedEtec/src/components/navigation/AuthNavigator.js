@@ -17,7 +17,7 @@ export default function AuthNavigator() {
         <Stack.Navigator>
             {/* <Stack.Screen name="SingInToken" component={SingInToken} options={{ headerShown: false }} /> */}
 
-            {/* <Stack.Screen name="GroupChatScreen" component={GroupChatScreen} options={{headerShown: false}}/> */}
+            {/*<Stack.Screen name="GroupChatScreen" component={GroupChatScreen} options={{headerShown: false}}/>*/}
             
             <Stack.Screen name="LoginScreen" component={LoginScreen} options={{ headerShown: false }} />
             <Stack.Screen name="RegisterScreen" component={RegisterScreen} options={{ headerShown: false }} />

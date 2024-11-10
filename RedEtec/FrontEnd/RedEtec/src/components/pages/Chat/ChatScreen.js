@@ -61,7 +61,7 @@ export default function ChatScreen() {
         setError('');
         try {
             const token = await AsyncStorage.getItem('token');
-            const response = await axios.get('https://localhost:7140/api/Grupo/getgrupos', { // URL do seu endpoint de grupos
+            const response = await axios.get('https://localhost:7140/api/Grupo/', {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -83,7 +83,7 @@ export default function ChatScreen() {
     };
 
     const handleSelectGroup = (group) => {
-        navigation.navigate('GroupChatScreen', { // Navega para a tela do grupo
+        navigation.navigate('GroupChatScreen', {
             groupId: group.Id_Grupo, 
             groupName: group.Nome_Grupo 
         });

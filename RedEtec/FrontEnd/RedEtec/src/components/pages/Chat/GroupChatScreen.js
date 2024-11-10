@@ -42,7 +42,7 @@ const dummyConversation = {
     ],
 };
 
-export default function GroupChatScreen({ route, navigation }) {
+export default function GroupChatScreen({navigation}) {
     const [message, setMessage] = useState('');
     const [messages, setMessages] = useState(dummyConversation.messages);
     const [isModalVisible, setIsModalVisible] = useState(false);
@@ -52,9 +52,47 @@ export default function GroupChatScreen({ route, navigation }) {
     const [file, setFile] = useState(null);
     const [selectedImage, setSelectedImage] = useState(null);
 
+    const [nivelDeAcesso, setNivelDeAcesso] = useState(null);
+    const [myId, setMyId] = useState(null);
+    const [myUsername, setMyUsername] = useState(null);
+
+
+    
+    /*FUNÇÃO PARA BUSCAR DADOS DO USUÁRIO LOGADO*/
+    const userLog = async () => {
+        try {
+            const token = await AsyncStorage.getItem('token');
+            if (!token) {
+                throw new Error('Token não encontrado. Por favor, faça login novamente.');
+            }
+
+            const response = await axios.get('https://localhost:7140/api/Usuario/getusuario', {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            const user = response.data;
+
+            console.log(user);
+
+            if (user && user.Id_Usuario !== undefined && user.Nivel_Acesso !== undefined) {
+                setMyId(user.Id_Usuario);
+                setNivelDeAcesso(user.Nivel_Acesso);
+                setMyUsername(user.Nome_Usuario)
+            } else {
+                throw new Error('Dados do usuário não encontrados na resposta.');
+            }
+
+        } catch (error) {
+            console.error("Erro ao buscar usuário logado: ", error.message);
+        }
+    };
+
     useEffect(() => {
-        // Simular carregamento das mensagens do servidor
         setMessages(dummyConversation.messages);
+        userLog();
     }, []);
 
     const handleSendMessage = () => {
