@@ -17,6 +17,8 @@ import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import { Ionicons } from '@expo/vector-icons'; // Importando ícones
 import avatar from '../../../../assets/perfil.png'
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const colors = {
     primary: '#040915',
@@ -42,7 +44,8 @@ const dummyConversation = {
     ],
 };
 
-export default function GroupChatScreen({navigation}) {
+export default function GroupChatScreen({navigation, route}) {
+    const {groupId, groupName} = route.params;
     const [message, setMessage] = useState('');
     const [messages, setMessages] = useState(dummyConversation.messages);
     const [isModalVisible, setIsModalVisible] = useState(false);
@@ -55,6 +58,7 @@ export default function GroupChatScreen({navigation}) {
     const [nivelDeAcesso, setNivelDeAcesso] = useState(null);
     const [myId, setMyId] = useState(null);
     const [myUsername, setMyUsername] = useState(null);
+
 
 
     
@@ -184,7 +188,7 @@ export default function GroupChatScreen({navigation}) {
                 />
                 {/* Nome da Conversa com funcionalidade de clique */}
                 <TouchableOpacity onPress={() => setIsGroupInfoVisible(true)} style={styles.nameContainer}>
-                    <Text style={styles.nameUser}>{dummyConversation.name}</Text>
+                    <Text style={styles.nameUser}>{groupName}</Text>
                 </TouchableOpacity>
                 {/* Botão de Opções */}
                 <TouchableOpacity 

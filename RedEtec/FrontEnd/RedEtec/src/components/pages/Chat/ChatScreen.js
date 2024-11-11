@@ -25,7 +25,7 @@ const colors = {
 export default function ChatScreen() {
     const navigation = useNavigation();
     const [conversations, setConversations] = useState([]);
-    const [groups, setGroups] = useState([]); // Estado para grupos
+    const [groups, setGroups] = useState([]); // Inicializar como um array vazio
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [refreshing, setRefreshing] = useState(false);
@@ -33,8 +33,10 @@ export default function ChatScreen() {
 
     useEffect(() => {
         fetchConversations();
-        fetchGroups(); // Função para buscar grupos
+        fetchGroups();
+        console.log('Groups fetched:', groups);
     }, []);
+    
 
     const fetchConversations = async () => {
         setLoading(true);
@@ -61,12 +63,13 @@ export default function ChatScreen() {
         setError('');
         try {
             const token = await AsyncStorage.getItem('token');
-            const response = await axios.get('https://localhost:7140/api/Grupo/', {
+            const response = await axios.get('https://localhost:7140/api/Grupo/curso', {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
             });
-            setGroups(response.data); // Armazena os grupos no estado
+            const groupsData = Array.isArray(response.data) ? response.data : [response.data];
+            setGroups(groupsData); 
         } catch (err) {
             console.error('Erro ao buscar grupos:', err);
             setError(err.message || 'Erro ao buscar grupos. Tente novamente mais tarde.');
@@ -74,6 +77,9 @@ export default function ChatScreen() {
             setLoading(false);
         }
     };
+    
+
+    console.log(groups);
 
     const handleSelectConversation = (conversation) => {
         navigation.navigate('PrivateChatScreen', { 
@@ -92,15 +98,10 @@ export default function ChatScreen() {
     const onRefresh = () => {
         setRefreshing(true);
         fetchConversations();
-        fetchGroups(); // Atualiza os grupos também
     };
 
     const filteredConversations = conversations.filter(conversation => 
         conversation.Nome_Usuario?.toLowerCase().includes(searchText.toLowerCase())
-    );
-
-    const filteredGroups = groups.filter(group => 
-        group.Nome_Grupo?.toLowerCase().includes(searchText.toLowerCase())
     );
 
     const renderConversationItem = ({ item }) => {
@@ -129,15 +130,16 @@ export default function ChatScreen() {
                 activeOpacity={0.7}
             >
                 <Image 
-                    source={require('../../../../assets/grupo.png')} // Adicione uma imagem para o grupo
+                    source={require('../../../../assets/grupo.png')}
                     style={styles.avatar} 
                 />
                 <View style={styles.itemDetails}>
-                    <Text style={styles.itemText}>{item.Nome_Grupo || 'Grupo desconhecido'}</Text>
+                    <Text style={styles.itemText}>{item.Nome_Grupo}</Text>
                 </View>
             </TouchableOpacity>
         );
     };
+    
 
     if (loading) {
         return (
@@ -170,7 +172,7 @@ export default function ChatScreen() {
 
             <TextInput
                 style={styles.searchInput}
-                placeholder="Pesquisar por nome ou grupo"
+                placeholder="Pesquisar por conversa"
                 placeholderTextColor={colors.text}
                 value={searchText}
                 onChangeText={setSearchText}
@@ -178,8 +180,9 @@ export default function ChatScreen() {
 
             <Text style={styles.sectionTitle}>Conversas</Text>
             <FlatList
+                style={styles.sectionConversations}
                 data={filteredConversations} 
-                keyExtractor={(item) => item.id_Usuario ? item.id_Usuario.toString() : Math.random().toString()} 
+                keyExtractor={(item) => item.Id_Usuario ? item.Id_Usuario.toString() : Math.random().toString()} 
                 renderItem={renderConversationItem}
                 ListEmptyComponent={
                     <View style={styles.emptyContainer}>
@@ -192,17 +195,16 @@ export default function ChatScreen() {
                 contentContainerStyle={filteredConversations.length === 0 ? styles.flatListEmpty : null}
             />
 
-            <Text style={styles.sectionTitle}>Grupos</Text>
+            <Text style={styles.sectionTitle}>Comunidade</Text>
             <FlatList
-                data={filteredGroups} 
-                keyExtractor={(item) => item.id_Grupo ? item.id_Grupo.toString() : Math.random().toString()} 
+                data={groups}
+                keyExtractor={(item) => item.Id_Grupo.toString()}
                 renderItem={renderGroupItem}
                 ListEmptyComponent={
                     <View style={styles.emptyContainer}>
-                        <Text style={styles.emptyText}>Nenhum grupo encontrado.</Text>
+                        <Text style={styles.emptyText}>Nenhum comunidade encontrado.</Text>
                     </View>
                 }
-                contentContainerStyle={filteredGroups.length === 0 ? styles.flatListEmpty : null}
             />
         </View>
     );
@@ -246,6 +248,9 @@ const styles = StyleSheet.create({
         marginVertical: 10,
         marginLeft: 15,
     },
+    sectionConversations: {
+        maxHeight: 400
+    },
     item: {
         flexDirection: 'row',
         padding: 15,
@@ -285,17 +290,16 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     emptyText: {
-        color: colors.text,
-        fontSize: 16,
+        color: colors.primary,
+    },
+    flatListEmpty: {
+        paddingBottom: 50,
     },
     searchInput: {
-        height: 40,
-        borderColor: colors.border,
-        borderWidth: 1,
-        margin: 15,
-        paddingHorizontal: 10,
+        backgroundColor: colors.primary,
+        padding: 10,
+        margin: 10,
         borderRadius: 5,
         color: colors.text,
     },
 });
-
