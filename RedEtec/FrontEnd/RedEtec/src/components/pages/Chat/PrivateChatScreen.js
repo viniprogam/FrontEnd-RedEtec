@@ -199,7 +199,7 @@ export default function PrivateChatScreen({ route, navigation }) {
         <Text style={item.isSent ? styles.userText : styles.otherText}>
         {item.Mensagem}
         </Text>
-        {(nivelDeAcesso === 1 || item.EmissorId === myId) && (
+        {(item.EmissorId === myId) && (
         <TouchableOpacity style={styles.deleteButton} onPress={() => confirmDeleteMessage(item.MensagemId)}>
             <Ionicons name="trash" style={styles.deleteButtonText} />
         </TouchableOpacity>
@@ -358,9 +358,11 @@ const styles = StyleSheet.create({
 		marginBottom: 5,
 	},
 	userText: {
+		maxWidth:500,
 		color: colors.text,
 	},
 	otherText: {
+		maxWidth:500,
 		color: colors.text,
 	},
 	inputContainer: {

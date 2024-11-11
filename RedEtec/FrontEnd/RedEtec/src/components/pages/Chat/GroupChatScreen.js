@@ -1,17 +1,18 @@
 // src/pages/Chat/GroupChatScreen.js
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
     View, 
-    Text, 
-    StyleSheet, 
-    TextInput, 
-    TouchableOpacity, 
-    ScrollView, 
-    Image, 
-    Modal, 
-    Alert, 
-    KeyboardAvoidingView, 
-    Platform 
+	Text, 
+	StyleSheet, 
+	TextInput, 
+	TouchableOpacity, 
+	FlatList, 
+	Image, 
+	ActivityIndicator, 
+	KeyboardAvoidingView, 
+	Platform, 
+	Alert,
+	Modal
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
@@ -34,7 +35,6 @@ const colors = {
 
 const dummyConversation = {
     avatar: { uri: avatar },
-    name: 'Grupo de Teste',
     description: 'Este é um grupo de teste para fins de demonstração.',
     members: ['Usuário 1', 'Usuário 2', 'Usuário 3'],
     messages: [
@@ -46,8 +46,13 @@ const dummyConversation = {
 
 export default function GroupChatScreen({navigation, route}) {
     const {groupId, groupName} = route.params;
+
     const [message, setMessage] = useState('');
-    const [messages, setMessages] = useState(dummyConversation.messages);
+    const [messages, setMessages] = useState([]);
+    const [loading, setLoading] = useState(true);
+	const flatListRef = useRef(null);
+	const fetchIntervalRef = useRef(null);
+
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [isGroupInfoVisible, setIsGroupInfoVisible] = useState(false);
     const [modalFileVisible, setModalFileVisible] = useState(false);
@@ -59,6 +64,60 @@ export default function GroupChatScreen({navigation, route}) {
     const [myId, setMyId] = useState(null);
     const [myUsername, setMyUsername] = useState(null);
 
+    const [modalVisible, setModalVisible] = useState(false);
+	const [selectedMessageId, setSelectedMessageId] = useState(null);
+
+
+    /*FUNÇÃO PARA CARREGAR OS MENSAGENS */
+	const fetchMessages = async () => {
+		try {
+			const token = await AsyncStorage.getItem('token');
+			if (!token) {
+				throw new Error('Token não encontrado. Por favor, faça login novamente.');
+			}
+
+			const response = await axios.get(`https://localhost:7140/api/Chat/${userId}`, {
+				headers: {
+					Authorization: `Bearer ${token}`
+				}
+			});
+
+			console.log(response)
+
+			if (response.status === 200) {
+				if (Array.isArray(response.data)) {
+					const fetchedMessages = response.data.map(msg => ({
+						MensagemId: msg.MensagemId,
+						EmissorId: msg.EmissorId,
+						ReceptorId: msg.ReceptorId,
+						Mensagem: msg.Mensagem,
+						LocalizacaoMidia: msg.LocalizacaoMidia,
+						Timestamp: new Date(msg.Data_Mensagem),
+						isSent: msg.EmissorId === userId
+					}));
+
+					// Atualiza o estado com as mensagens mais recentes
+					setMessages(fetchedMessages.sort((a, b) => a.Timestamp - b.Timestamp));
+				} else {
+					Alert.alert('Erro', 'Formato inesperado de dados retornado da API.');
+				}
+			} else {
+				throw new Error(`Erro ao buscar mensagens: ${response.status} - ${response.data}`);
+			}
+		} catch (error) {
+			handleError(error);
+		} finally {
+			setLoading(false);
+		}
+	};
+
+    const handleError = (error) => {
+		if (error.response) {
+			Alert.alert('Erro', error.response.data.message || 'Erro desconhecido no servidor.');
+		} else {
+			Alert.alert('Erro', error.message || 'Erro ao buscar mensagens.');
+		}
+	};
 
 
     
@@ -95,36 +154,121 @@ export default function GroupChatScreen({navigation, route}) {
     };
 
     useEffect(() => {
-        setMessages(dummyConversation.messages);
-        userLog();
-    }, []);
+		fetchMessages();
+		fetchIntervalRef.current = setInterval(fetchMessages, 100);
+		userLog();
 
-    const handleSendMessage = () => {
-        if (message.trim()) {
-            setMessages([...messages, { text: message, sender: 'user' }]);
-            setMessage('');
-        }
-    };
+		return () => {
+			clearInterval(fetchIntervalRef.current);
+		};
+	}, [groupId]);
 
-    const handleDeleteConversation = () => {
-        Alert.alert(
-            'Confirmar',
-            'Você tem certeza que deseja apagar esta conversa?',
-            [
-                { text: 'Cancelar', style: 'cancel' },
-                { 
-                    text: 'Apagar', 
-                    style: 'destructive', 
-                    onPress: () => {
-                        setMessages([]); // Limpa as mensagens
-                        Alert.alert('Conversa Apagada', 'A conversa foi apagada com sucesso.');
-                        navigation.goBack(); // Navega de volta para a tela anterior
-                    }
-                },
-            ]
+    /*FUNÇÃO PARA ENVIAS AS MENSAGENS */
+	const handleSendMessage = async () => {
+		if (message.trim()) {
+			try {
+				setLoading(true);
+				const token = await AsyncStorage.getItem('token');
+				if (!token) {
+					throw new Error('Token não encontrado. Por favor, faça login novamente.');
+				}
+
+				const response = await axios.post(
+					'https://localhost:7140/api/Chat/enviarmensagem',
+					{
+						ReceptorId: userId,
+						Mensagem: message.trim(),
+					},
+					{
+						headers: {
+							Authorization: `Bearer ${token}`,
+							'Content-Type': 'application/json',
+						},
+					}
+				);
+
+
+				if (response.status === 200) {
+					const newMessage = {
+						Mensagem: message.trim(),
+						ReceptorId: userId,
+						LocalizacaoMidia: null,
+						Timestamp: new Date(),
+						isSent: true
+					};
+					setMessages(prevMessages => [...prevMessages, newMessage]);
+					setMessage('');
+					flatListRef.current.scrollToEnd({ animated: true });
+				} else {
+					throw new Error('Não foi possível enviar a mensagem. Tente novamente.');
+				}
+			} catch (err) {
+				Alert.alert('Erro', err.message || 'Não foi possível enviar a mensagem. Tente novamente.');
+			} finally {
+				setLoading(false);
+			}
+		} else {
+			Alert.alert('Mensagem vazia', 'Por favor, digite uma mensagem antes de enviar.');
+		}
+	};
+
+    /*RENDERIZA AS MENSAGENS E ACORDO COM O ENVIO DO REMENETENTE: UserMessage ou OtherMessage */
+	const renderItem = ({ item }) => {
+        return (
+        <View style={[styles.messageContainer, item.isSent ? styles.userMessage : styles.otherMessage]}>
+            {item.LocalizacaoMidia ? (
+            <Image 
+                source={{ uri: item.LocalizacaoMidia }}
+                style={styles.messageImage}
+            />
+            ) : null}
+            <Text style={item.isSent ? styles.userText : styles.otherText}>
+            {item.Mensagem}
+            </Text>
+            {(nivelDeAcesso === 1 || item.EmissorId === myId) && (
+            <TouchableOpacity style={styles.deleteButton} onPress={() => confirmDeleteMessage(item.MensagemId)}>
+                <Ionicons name="trash" style={styles.deleteButtonText} />
+            </TouchableOpacity>
+            )}
+        </View>
         );
-        setIsModalVisible(false);
     };
+
+    /*FUNÇÃO PARA DELETAR MENSAGENS */
+	const confirmDeleteMessage = (messageId) => {
+		setSelectedMessageId(messageId);
+		setModalVisible(true);
+	};
+
+	const handlerDeleteMessage = async (messageId) => {
+		try {
+			const token = await AsyncStorage.getItem('token');
+			if (!token) {
+				throw new Error('Token não encontrado. Por favor, faça login novamente.');
+			}
+
+			await axios.delete(`https://localhost:7140/api/Chat/${messageId}`, {
+				headers: {
+					Authorization: `Bearer ${token}`,
+				}
+			});
+
+			// Remove a mensagem excluída do estado de mensagens
+			setMessages((prevMessages) => prevMessages.filter((msg) => msg.MensagemId !== messageId));
+		} catch (error) {
+			Alert.alert('Erro', error.message || 'Não foi possível excluir a mensagem.');
+		}
+	};
+
+    const keyExtractor = (item) => {
+		return item.Timestamp instanceof Date && !isNaN(item.Timestamp.getTime()) 
+			? item.Timestamp.toISOString() 
+			: String(Math.random());
+	};
+
+    if (loading) {
+		return <ActivityIndicator size="large" color={colors.primary} />;
+	}
 
     const selectFileMessage = () => {
 		setModalFileVisible(true);
@@ -190,83 +334,35 @@ export default function GroupChatScreen({navigation, route}) {
                 <TouchableOpacity onPress={() => setIsGroupInfoVisible(true)} style={styles.nameContainer}>
                     <Text style={styles.nameUser}>{groupName}</Text>
                 </TouchableOpacity>
-                {/* Botão de Opções */}
-                <TouchableOpacity 
-                    style={styles.optionsButton} 
-                    onPress={() => setIsModalVisible(true)}
-                >
-                    <Ionicons name="ellipsis-vertical" size={24} color={colors.text} />
-                </TouchableOpacity>
             </View>
 
             {/* Lista de Mensagens */}
-            <ScrollView 
-                style={styles.messageContainer} 
-                contentContainerStyle={{ paddingVertical: 10 }}
-                showsVerticalScrollIndicator={false}
-            >
-                {messages.map((msg, index) => (
-                    <View
-                        key={index}
-                        style={[
-                            styles.message, 
-                            msg.sender === 'user' ? styles.userMessage : styles.otherMessage
-                        ]}
-                    >
-                        {msg.image && (
-                            <Image
-                                source={{ uri: msg.image }}
-                                style={styles.messageImage}
-                            />
-                        )}
-                        <Text style={msg.sender === 'user' ? styles.userText : styles.otherText}>
-                            {msg.text}
-                        </Text>
-                    </View>
-                ))}
-            </ScrollView>
+            <FlatList
+				data={messages}
+				renderItem={renderItem}
+				keyExtractor={keyExtractor}
+				ref={flatListRef}
+				contentContainerStyle={{ paddingBottom: 20 }}
+                onEndReachedThreshold={0}
+			/>
 
             {/* Input de Mensagem */}
             <View style={styles.inputContainer}>
-                <TextInput
-                    style={styles.input}
-                    value={message}
-                    onChangeText={setMessage}
-                    placeholder="Digite uma mensagem"
-                    placeholderTextColor="#8A8F9E"
-                />
-                <TouchableOpacity style={styles.sendButton} onPress={handleSendMessage}>
-                    <Ionicons name="send" size={15} color={colors.text} />
-                </TouchableOpacity>
+				<TextInput
+					style={styles.input}
+					value={message}
+					onChangeText={setMessage}
+					placeholder="Digite sua mensagem..."
+					placeholderTextColor={colors.border}
+				/>
+				<TouchableOpacity onPress={handleSendMessage}>
+					<Ionicons name="send" size={15} color={colors.text} />
+				</TouchableOpacity>
                 <TouchableOpacity onPress={selectFileMessage}>
 					<Ionicons name="ellipsis-vertical" size={15} color={colors.text} />
 				</TouchableOpacity>
             </View>
 
-            {/* Modal de Opções */}
-            <Modal
-                transparent={true}
-                visible={isModalVisible}
-                animationType="fade"
-                onRequestClose={() => setIsModalVisible(false)}
-            >
-                <TouchableOpacity 
-                    style={styles.modalOverlay} 
-                    activeOpacity={1} 
-                    onPressOut={() => setIsModalVisible(false)}
-                >
-                    <View style={styles.modalContent}>
-                        <TouchableOpacity 
-                            style={styles.modalOption} 
-                            onPress={handleDeleteConversation}
-                        >
-                            <Ionicons name="trash" size={20} color="#FF3B30" style={{ marginRight: 10 }} />
-                            <Text style={styles.modalOptionText}>Sair da comunidade</Text>
-                        </TouchableOpacity>
-                        {/* Adicione mais opções aqui, se necessário */}
-                    </View>
-                </TouchableOpacity>
-            </Modal>
 
             {/* Modal de Informações do Grupo */}
             <Modal
@@ -310,6 +406,34 @@ export default function GroupChatScreen({navigation, route}) {
 						</TouchableOpacity>
 						<TouchableOpacity onPress={pickDocument}>
 						<Ionicons name="document-text" size={24} color={colors.primary} />
+						</TouchableOpacity>
+					</View>
+				</View>
+			</Modal>
+
+            {/* Modal de confirmação de exclusão */}
+			<Modal
+				animationType="slide"
+				transparent={true}
+				visible={modalVisible}
+				onRequestClose={() => {
+					setModalVisible(!modalVisible);
+				}}>
+				<View style={styles.modalView}>
+					<Text style={styles.modalText}>Tem certeza que deseja excluir esta mensagem?</Text>
+					<View style={styles.modalButtons}>
+						<TouchableOpacity
+							style={[styles.button, styles.buttonDelete]}
+							onPress={() => {
+								handlerDeleteMessage(selectedMessageId);
+								setModalVisible(false);
+							}}>
+							<Text style={styles.buttonText}>Excluir</Text>
+						</TouchableOpacity>
+						<TouchableOpacity
+							style={[styles.button, styles.buttonCancel]}
+							onPress={() => setModalVisible(false)}>
+							<Text style={styles.buttonText}>Cancelar</Text>
 						</TouchableOpacity>
 					</View>
 				</View>
