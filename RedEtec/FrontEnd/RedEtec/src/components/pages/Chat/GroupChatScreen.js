@@ -92,7 +92,7 @@ export default function GroupChatScreen({navigation, route}) {
 						Mensagem: msg.Mensagem,
 						LocalizacaoMidia: msg.LocalizacaoMidia,
 						Timestamp: new Date(msg.Data_Mensagem),
-						isSent: msg.EmissorId === userId
+						isSent: msg.Id_Usuario_Emissor === myId
 					}));
 
 					// Atualiza o estado com as mensagens mais recentes
@@ -154,7 +154,7 @@ export default function GroupChatScreen({navigation, route}) {
 
     useEffect(() => {
 		fetchMessages();
-		fetchIntervalRef.current = setInterval(fetchMessages, 100);
+		fetchIntervalRef.current = setInterval(fetchMessages, 3000);
 		userLog();
 
 		return () => {
@@ -263,7 +263,7 @@ export default function GroupChatScreen({navigation, route}) {
 
     const renderItem = ({ item }) => {
 		return (
-				<View style={[styles.messageContainer, item.isSent ? styles.userMessage : styles.otherMessage]}>
+				<View style={[styles.messageContainer, item.Id_Usuario_Emissor === myId ? styles.userMessage : styles.otherMessage]}>
 					{item.LocalizacaoMidia ? (
 					<Image 
 						source={{ uri: item.LocalizacaoMidia }}
@@ -453,10 +453,10 @@ const styles = StyleSheet.create({
         padding: 5,
     },
     messageContainer: {
-        flex: 1,
-        paddingHorizontal: 15,
-        backgroundColor: colors.background,
-    },
+		marginVertical: 5,
+		padding: 10,
+		borderRadius: 10,
+	},
     message: {
         padding: 10,
         borderRadius: 10,
@@ -464,13 +464,17 @@ const styles = StyleSheet.create({
         maxWidth: '80%',
     },
     userMessage: {
-        backgroundColor: colors.messageUser,
-        alignSelf: 'flex-end',
-    },
-    otherMessage: {
-        backgroundColor: colors.messageOther,
-        alignSelf: 'flex-start',
-    },
+		backgroundColor: colors.border,
+		alignSelf: 'flex-end',
+		display: 'flex',
+		flexDirection: 'row'
+	},
+	otherMessage: {
+        backgroundColor: colors.secondary,
+		alignSelf: 'flex-start',
+		display: 'flex',
+		flexDirection: 'row'
+	},
     userText: {
         color: colors.primary,
     },

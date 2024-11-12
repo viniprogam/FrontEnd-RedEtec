@@ -347,14 +347,14 @@ const styles = StyleSheet.create({
 		borderRadius: 10,
 	},
 	userMessage: {
-		backgroundColor: colors.secondary,
-		alignSelf: 'flex-start',
+		backgroundColor: colors.border,
+		alignSelf: 'flex-end',
 		display: 'flex',
 		flexDirection: 'row'
 	},
 	otherMessage: {
-		backgroundColor: colors.border,
-		alignSelf: 'flex-end',
+		backgroundColor: colors.secondary,
+		alignSelf: 'flex-start',
 		display: 'flex',
 		flexDirection: 'row'
 	},
