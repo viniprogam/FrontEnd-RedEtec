@@ -76,7 +76,7 @@ export default function GroupChatScreen({navigation, route}) {
 				throw new Error('Token não encontrado. Por favor, faça login novamente.');
 			}
 
-			const response = await axios.get(`https://localhost:7140/api/Chat/${userId}`, {
+			const response = await axios.get(`https://localhost:7140/api/ChatGrupo/${groupId}`, {
 				headers: {
 					Authorization: `Bearer ${token}`
 				}
@@ -88,8 +88,7 @@ export default function GroupChatScreen({navigation, route}) {
 				if (Array.isArray(response.data)) {
 					const fetchedMessages = response.data.map(msg => ({
 						MensagemId: msg.MensagemId,
-						EmissorId: msg.EmissorId,
-						ReceptorId: msg.ReceptorId,
+						Id_Usuario_Emissor: msg.Id_Usuario_Emissor,
 						Mensagem: msg.Mensagem,
 						LocalizacaoMidia: msg.LocalizacaoMidia,
 						Timestamp: new Date(msg.Data_Mensagem),
@@ -165,100 +164,52 @@ export default function GroupChatScreen({navigation, route}) {
 
     /*FUNÇÃO PARA ENVIAS AS MENSAGENS */
 	const handleSendMessage = async () => {
-		if (message.trim()) {
-			try {
-				setLoading(true);
-				const token = await AsyncStorage.getItem('token');
-				if (!token) {
-					throw new Error('Token não encontrado. Por favor, faça login novamente.');
-				}
+        if(message.trim()) {
+            try {
+                setLoading(true);
+                const token = await AsyncStorage.getItem('token');
+                if(!token) {
+                    throw new Error('Token não encontrado. Por favor, faça login novamente.');
+                }
+                const response = await axios.post('https://localhost:7140/api/ChatGrupo',
+                    {
+                        Id_Grupo: groupId,
+                        Id_Usuario_Emissor: myId,
+                        Mensagem: message.trim(),
+                    },
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                            'Content-Type': 'application/json',
+                        }
+                    }
+                );
+                
 
-				const response = await axios.post(
-					'https://localhost:7140/api/Chat/enviarmensagem',
-					{
-						ReceptorId: userId,
-						Mensagem: message.trim(),
-					},
-					{
-						headers: {
-							Authorization: `Bearer ${token}`,
-							'Content-Type': 'application/json',
-						},
-					}
-				);
-
-
-				if (response.status === 200) {
+                if (response.status === 200) {
 					const newMessage = {
+                        Id_Grupo: groupId,
 						Mensagem: message.trim(),
-						ReceptorId: userId,
+						Id_Usuario_Emissor: myId,
 						LocalizacaoMidia: null,
 						Timestamp: new Date(),
 						isSent: true
 					};
-					setMessages(prevMessages => [...prevMessages, newMessage]);
+                    setMessages(prevMessages => [...prevMessages, newMessage]);
 					setMessage('');
 					flatListRef.current.scrollToEnd({ animated: true });
-				} else {
+                } else {
 					throw new Error('Não foi possível enviar a mensagem. Tente novamente.');
 				}
-			} catch (err) {
-				Alert.alert('Erro', err.message || 'Não foi possível enviar a mensagem. Tente novamente.');
-			} finally {
+            } catch(err) {
+                Alert.alert('Erro', err.message || 'Não foi possível enviar a mensagem. Tente novamente.');
+            } finally {
 				setLoading(false);
 			}
-		} else {
+        } else {
 			Alert.alert('Mensagem vazia', 'Por favor, digite uma mensagem antes de enviar.');
 		}
-	};
-
-    /*RENDERIZA AS MENSAGENS E ACORDO COM O ENVIO DO REMENETENTE: UserMessage ou OtherMessage */
-	const renderItem = ({ item }) => {
-        return (
-        <View style={[styles.messageContainer, item.isSent ? styles.userMessage : styles.otherMessage]}>
-            {item.LocalizacaoMidia ? (
-            <Image 
-                source={{ uri: item.LocalizacaoMidia }}
-                style={styles.messageImage}
-            />
-            ) : null}
-            <Text style={item.isSent ? styles.userText : styles.otherText}>
-            {item.Mensagem}
-            </Text>
-            {(nivelDeAcesso === 1 || item.EmissorId === myId) && (
-            <TouchableOpacity style={styles.deleteButton} onPress={() => confirmDeleteMessage(item.MensagemId)}>
-                <Ionicons name="trash" style={styles.deleteButtonText} />
-            </TouchableOpacity>
-            )}
-        </View>
-        );
     };
-
-    /*FUNÇÃO PARA DELETAR MENSAGENS */
-	const confirmDeleteMessage = (messageId) => {
-		setSelectedMessageId(messageId);
-		setModalVisible(true);
-	};
-
-	const handlerDeleteMessage = async (messageId) => {
-		try {
-			const token = await AsyncStorage.getItem('token');
-			if (!token) {
-				throw new Error('Token não encontrado. Por favor, faça login novamente.');
-			}
-
-			await axios.delete(`https://localhost:7140/api/Chat/${messageId}`, {
-				headers: {
-					Authorization: `Bearer ${token}`,
-				}
-			});
-
-			// Remove a mensagem excluída do estado de mensagens
-			setMessages((prevMessages) => prevMessages.filter((msg) => msg.MensagemId !== messageId));
-		} catch (error) {
-			Alert.alert('Erro', error.message || 'Não foi possível excluir a mensagem.');
-		}
-	};
 
     const keyExtractor = (item) => {
 		return item.Timestamp instanceof Date && !isNaN(item.Timestamp.getTime()) 
@@ -311,6 +262,22 @@ export default function GroupChatScreen({navigation, route}) {
             setModalFileVisible(false);
         }
     };
+
+    const renderItem = ({ item }) => {
+		return (
+				<View style={[styles.messageContainer, item.isSent ? styles.userMessage : styles.otherMessage]}>
+					{item.LocalizacaoMidia ? (
+					<Image 
+						source={{ uri: item.LocalizacaoMidia }}
+						style={styles.messageImage}
+					/>
+					) : null}
+					<Text style={item.isSent ? styles.userText : styles.otherText}>
+					{item.Mensagem}
+					</Text>
+				</View>
+			);
+	};
 
 
     return (

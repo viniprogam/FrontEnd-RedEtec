@@ -59,6 +59,8 @@ export default function PostScreen() {
             formData.append('file', file.file);
         }
 
+        console.log(file)
+
         try {
             const token = await AsyncStorage.getItem("token");
             if (!token) {

@@ -41,6 +41,7 @@ export default function PrivateChatScreen({ route, navigation }) {
 	const [selectedMessageId, setSelectedMessageId] = useState(null);
 
 
+
 	/*FUNÇÃO PARA CARREGAR OS MENSAGENS */
 	const fetchMessages = async () => {
 		try {
@@ -48,15 +49,13 @@ export default function PrivateChatScreen({ route, navigation }) {
 			if (!token) {
 				throw new Error('Token não encontrado. Por favor, faça login novamente.');
 			}
-
+	
 			const response = await axios.get(`https://localhost:7140/api/Chat/${userId}`, {
 				headers: {
 					Authorization: `Bearer ${token}`
 				}
 			});
-
-			console.log(response)
-
+	
 			if (response.status === 200) {
 				if (Array.isArray(response.data)) {
 					const fetchedMessages = response.data.map(msg => ({
@@ -68,9 +67,16 @@ export default function PrivateChatScreen({ route, navigation }) {
 						Timestamp: new Date(msg.Data_Mensagem),
 						isSent: msg.EmissorId === userId
 					}));
-
+	
 					// Atualiza o estado com as mensagens mais recentes
 					setMessages(fetchedMessages.sort((a, b) => a.Timestamp - b.Timestamp));
+	
+					// // Verifica se a última mensagem foi de outro usuário
+					// const lastMessage = fetchedMessages[fetchedMessages.length - 1];
+					// if (lastMessage.EmissorId !== myId) {
+					// 	// Exibe alerta
+					// 	console.log('Nova mensagem', `Você recebeu uma nova mensagem de ${userName}`);
+					// }
 				} else {
 					Alert.alert('Erro', 'Formato inesperado de dados retornado da API.');
 				}
@@ -83,6 +89,7 @@ export default function PrivateChatScreen({ route, navigation }) {
 			setLoading(false);
 		}
 	};
+	
 
 	const handleError = (error) => {
 		if (error.response) {
@@ -122,8 +129,8 @@ export default function PrivateChatScreen({ route, navigation }) {
 					{
 						headers: {
 							Authorization: `Bearer ${token}`,
-							'Content-Type': 'application/json',
-						},
+							'Content-Type': 'application/json'
+						}
 					}
 				);
 
@@ -188,25 +195,25 @@ export default function PrivateChatScreen({ route, navigation }) {
 
 	/*RENDERIZA AS MENSAGENS E ACORDO COM O ENVIO DO REMENETENTE: UserMessage ou OtherMessage */
 	const renderItem = ({ item }) => {
-    return (
-    <View style={[styles.messageContainer, item.isSent ? styles.userMessage : styles.otherMessage]}>
-        {item.LocalizacaoMidia ? (
-        <Image 
-            source={{ uri: item.LocalizacaoMidia }}
-            style={styles.messageImage}
-        />
-        ) : null}
-        <Text style={item.isSent ? styles.userText : styles.otherText}>
-        {item.Mensagem}
-        </Text>
-        {(item.EmissorId === myId) && (
-        <TouchableOpacity style={styles.deleteButton} onPress={() => confirmDeleteMessage(item.MensagemId)}>
-            <Ionicons name="trash" style={styles.deleteButtonText} />
-        </TouchableOpacity>
-        )}
-    </View>
-    );
-};
+		return (
+				<View style={[styles.messageContainer, item.isSent ? styles.userMessage : styles.otherMessage]}>
+					{item.LocalizacaoMidia ? (
+					<Image 
+						source={{ uri: item.LocalizacaoMidia }}
+						style={styles.messageImage}
+					/>
+					) : null}
+					<Text style={item.isSent ? styles.userText : styles.otherText}>
+					{item.Mensagem}
+					</Text>
+					{(item.EmissorId === myId) && (
+					<TouchableOpacity style={styles.deleteButton} onPress={() => confirmDeleteMessage(item.MensagemId)}>
+						<Ionicons name="trash" style={styles.deleteButtonText} />
+					</TouchableOpacity>
+					)}
+				</View>
+			);
+	};
 	/*FUNÇÃO PARA DELETAR MENSAGENS */
 	const confirmDeleteMessage = (messageId) => {
 		setSelectedMessageId(messageId);

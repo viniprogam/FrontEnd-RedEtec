@@ -1,3 +1,140 @@
+{/*TELA CRIADA PELO CHAT GPT CRIA A OPÇÃO DE RESPOSTA DA CONVERSA */}
+
+
+// import React, { useState } from 'react';
+// import { View, Text, TextInput, TouchableOpacity, FlatList, StyleSheet } from 'react-native';
+
+// const ChatScreen = () => {
+//     const [messages, setMessages] = useState([
+//         { id: '1', text: 'Oi, como você está?' },
+//         { id: '2', text: 'Estou bem, e você?' },
+//         { id: '3', text: 'Tudo ótimo! O que vamos fazer hoje?' },
+//     ]);
+//     const [responseMessage, setResponseMessage] = useState(null); // Mensagem que será respondida
+//     const [message, setMessage] = useState(''); // Mensagem que o usuário digita para responder
+
+//     // Função para selecionar uma mensagem para resposta
+//     const handleSelectMessage = (message) => {
+//         setResponseMessage(message); // Armazena a mensagem selecionada para resposta
+//         setMessage(''); // Limpa o campo de entrada
+//     };
+
+//     // Função para enviar a resposta
+//     const handleSendMessage = () => {
+//         if (message.trim() !== '') {
+//             const newMessage = { id: `${messages.length + 1}`, text: message, responseTo: responseMessage.id };
+//             setMessages([...messages, newMessage]);
+//             setMessage('');
+//             setResponseMessage(null); // Limpa a mensagem selecionada após o envio
+//         }
+//     };
+
+//     // Função para renderizar as mensagens
+//     const renderMessageItem = ({ item }) => (
+//         <TouchableOpacity onPress={() => handleSelectMessage(item)}>
+//             <View style={styles.messageContainer}>
+//                 <Text>{item.text}</Text>
+
+//                 {/* Se a mensagem tem resposta, exibe ela abaixo */}
+//                 {item.responseTo && (
+//                     <View style={styles.responseContainer}>
+//                         <Text style={styles.responseText}>Resposta: {messages.find(m => m.id === item.responseTo)?.text}</Text>
+//                     </View>
+//                 )}
+//             </View>
+//         </TouchableOpacity>
+//     );
+
+//     return (
+//         <View style={styles.container}>
+//             <FlatList
+//                 data={messages}
+//                 keyExtractor={(item) => item.id}
+//                 renderItem={renderMessageItem}
+//             />
+            
+//             {/* Mostrar a mensagem selecionada para resposta */}
+//             {responseMessage && (
+//                 <View style={styles.replyContainer}>
+//                     <Text style={styles.replyText}>Respondendo a:</Text>
+//                     <Text style={styles.replyMessage}>{responseMessage.text}</Text>
+//                 </View>
+//             )}
+
+//             <View style={styles.inputContainer}>
+//                 <TextInput
+//                     style={styles.input}
+//                     placeholder="Digite sua mensagem"
+//                     value={message}
+//                     onChangeText={setMessage}
+//                 />
+//                 <TouchableOpacity onPress={handleSendMessage}>
+//                     <Text style={styles.sendButton}>Enviar</Text>
+//                 </TouchableOpacity>
+//             </View>
+//         </View>
+//     );
+// };
+
+// const styles = StyleSheet.create({
+//     container: {
+//         flex: 1,
+//         padding: 10,
+//         backgroundColor: '#fff',
+//     },
+//     messageContainer: {
+//         padding: 10,
+//         marginVertical: 5,
+//         backgroundColor: '#f1f1f1',
+//         borderRadius: 5,
+//     },
+//     responseContainer: {
+//         backgroundColor: '#e0e0e0',
+//         marginTop: 5,
+//         padding: 5,
+//         borderRadius: 5,
+//     },
+//     responseText: {
+//         fontSize: 12,
+//         fontStyle: 'italic',
+//         color: '#555',
+//     },
+//     inputContainer: {
+//         flexDirection: 'row',
+//         alignItems: 'center',
+//         borderTopWidth: 1,
+//         borderColor: '#ccc',
+//         padding: 10,
+//     },
+//     input: {
+//         flex: 1,
+//         borderWidth: 1,
+//         borderRadius: 5,
+//         padding: 10,
+//         marginRight: 10,
+//     },
+//     sendButton: {
+//         color: 'blue',
+//     },
+//     replyContainer: {
+//         backgroundColor: '#f9f9f9',
+//         padding: 10,
+//         marginBottom: 10,
+//     },
+//     replyText: {
+//         fontSize: 12,
+//         color: '#888',
+//     },
+//     replyMessage: {
+//         fontSize: 14,
+//         fontWeight: 'bold',
+//     },
+// });
+
+// export default ChatScreen;
+
+
+
 // // src/pages/Chat/GroupChatScreen.js
 // import React, { useState } from 'react';
 // import { 
