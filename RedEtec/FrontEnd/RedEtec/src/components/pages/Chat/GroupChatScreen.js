@@ -174,7 +174,6 @@ export default function GroupChatScreen({navigation, route}) {
                 const response = await axios.post('https://localhost:7140/api/ChatGrupo',
                     {
                         Id_Grupo: groupId,
-                        Id_Usuario_Emissor: myId,
                         Mensagem: message.trim(),
                     },
                     {
@@ -190,7 +189,6 @@ export default function GroupChatScreen({navigation, route}) {
 					const newMessage = {
                         Id_Grupo: groupId,
 						Mensagem: message.trim(),
-						Id_Usuario_Emissor: myId,
 						LocalizacaoMidia: null,
 						Timestamp: new Date(),
 						isSent: true

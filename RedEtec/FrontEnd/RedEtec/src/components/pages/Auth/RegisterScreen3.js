@@ -165,45 +165,45 @@ export default function RegisterScreen3() {
         }
     };
 
-    const handlerProfileImage = async () => {
-        try {
-            const token = await AsyncStorage.getItem("token");
-            if (!token) {
-                Alert.alert('Erro', 'Token de autenticação não encontrado.');
-                return;
-            }
+    // const handlerProfileImage = async () => {
+    //     try {
+    //         const token = await AsyncStorage.getItem("token");
+    //         if (!token) {
+    //             Alert.alert('Erro', 'Token de autenticação não encontrado.');
+    //             return;
+    //         }
     
-            // Verifique se a ProfileImage está presente
-            if (!ProfileImage) {
-                Alert.alert("Erro", "Foto de perfil não selecionada.");
-                return; // Se não houver foto, retorna e não realiza o cadastro
-            }
+    //         // Verifique se a ProfileImage está presente
+    //         if (!ProfileImage) {
+    //             Alert.alert("Erro", "Foto de perfil não selecionada.");
+    //             return; // Se não houver foto, retorna e não realiza o cadastro
+    //         }
     
-            // Envio do formulário incluindo a foto
-            const formData = new FormData();
-            formData.append('file', {
-                uri: ProfileImage,  // Usando ProfileImage diretamente
-                type: 'image/jpeg',  // Tipo MIME da imagem (ajuste conforme o tipo de imagem)
-                name: 'profile.jpg',  // Nome do arquivo
-            });
+    //         // Envio do formulário incluindo a foto
+    //         const formData = new FormData();
+    //         formData.append('file', {
+    //             uri: ProfileImage,  // Usando ProfileImage diretamente
+    //             type: 'image/jpeg',  // Tipo MIME da imagem (ajuste conforme o tipo de imagem)
+    //             name: 'profile.jpg',  // Nome do arquivo
+    //         });
     
-            axios.post('https://localhost:7140/api/Perfil', formData, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'multipart/form-data',  // Definindo o tipo de mídia correto
-                }
-            })
-            .then(response => {
-                console.log('Imagem enviada com sucesso', response);
-            })
-            .catch(error => {
-                console.error('Erro ao enviar imagem', error);
-            });
-        }
-        catch (error) {
-            console.error('Erro ao enviar imagem:', error);
-        }
-    }
+    //         axios.post('https://localhost:7140/api/Perfil', formData, {
+    //             headers: {
+    //                 Authorization: `Bearer ${token}`,
+    //                 'Content-Type': 'multipart/form-data',  // Definindo o tipo de mídia correto
+    //             }
+    //         })
+    //         .then(response => {
+    //             console.log('Imagem enviada com sucesso', response);
+    //         })
+    //         .catch(error => {
+    //             console.error('Erro ao enviar imagem', error);
+    //         });
+    //     }
+    //     catch (error) {
+    //         console.error('Erro ao enviar imagem:', error);
+    //     }
+    // }
     return (
         <View style={styles.container}>
             <View style={styles.imgContainer}>
@@ -319,7 +319,7 @@ export default function RegisterScreen3() {
                 style={styles.button}
                 onPress={async () => {
                     await handleRegister();  // Chama a função de registro de forma assíncrona
-                    await handlerProfileImage();  // Chama a função de imagem de perfil de forma assíncrona
+                    //       // Chama a função de imagem de perfil de forma assíncrona
                 }}
             >
                 <Text style={styles.buttonText}>Finalizar</Text>
