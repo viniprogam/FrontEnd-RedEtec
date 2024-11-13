@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput, Modal, Butt
 import * as ImagePicker from 'expo-image-picker';
 import { useUserProfile } from '../../context/UserProfileContext';
 import axios from 'axios';
+import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const colors = {
@@ -22,6 +23,7 @@ export default function ProfileScreen({route, navigation}) {
     const [nivelDeAcesso, setNivelDeAcesso] = useState(null);
     const [myId, setMyId] = useState(null);
     const [myUsername, setMyUsername] = useState(null);
+    const [supportModalVisible, setSupportModalVisible] = useState(false);
 
     /*FUNÇÃO PARA ATUALIZAR O NOME */
     const handleEditProfile = async () => {
@@ -163,6 +165,40 @@ export default function ProfileScreen({route, navigation}) {
                     </View>
                 </Modal>
             </View>
+
+            <TouchableOpacity
+                style={styles.supportButton}
+                onPress={() => setSupportModalVisible(true)}
+            >
+                <View style={styles.supportButtonContent}>
+                <ion-icon name="headset-sharp" size={40} color={colors.text}/>
+                    <Text style={styles.supportButtonText}>Suporte</Text>
+                </View>
+            </TouchableOpacity>
+
+            <Modal
+                visible={supportModalVisible}
+                animationType="fade"
+                transparent={true}
+                onRequestClose={() => setSupportModalVisible(false)}
+            >
+                <View style={styles.modalContainer}>
+                    <View style={styles.modalContent}>
+                    <ion-icon name="headset-sharp" size={40} color={colors.primary}/>
+                        <Text style={styles.modalTitle}>SUPORTE</Text>
+
+                        <View style={styles.supportInfo}>
+                            <Text style={styles.modalText}>suporte@redetec.com</Text>
+                        </View>
+
+                        <View style={styles.supportInfo}>
+                            <Text style={styles.link} onPress={() => Linking.openURL('https://www.reclameaqui.com.br')}>Reclame Aqui</Text>
+                        </View>
+
+                        <Button title="Fechar" onPress={() => setSupportModalVisible(false)} />
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 }
@@ -281,4 +317,36 @@ const styles = StyleSheet.create({
         padding: 5,
         fontSize: 18,
     },
+    supportButton: {
+        backgroundColor: colors.primary,
+        padding: 15,
+        borderRadius: 8,
+        alignItems: 'center',
+        marginTop: 30,
+        flexDirection: 'row',
+        justifyContent: 'center',
+    },
+    supportButtonContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    icon: {
+        marginRight: 10,
+    },
+    supportButtonText: {
+        color: colors.text,
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    supportInfo: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    link: {
+        color: colors.primary,
+        fontSize: 16,
+        textDecorationLine: 'underline',
+        marginLeft: 10,
+    }
 });

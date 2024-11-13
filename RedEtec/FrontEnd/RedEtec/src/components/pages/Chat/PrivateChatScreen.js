@@ -102,7 +102,7 @@ export default function PrivateChatScreen({ route, navigation }) {
 
 	useEffect(() => {
 		fetchMessages();
-		fetchIntervalRef.current = setInterval(fetchMessages, 100);
+		fetchIntervalRef.current = setInterval(fetchMessages, 300);
 		userLog();
 
 		return () => {
@@ -196,7 +196,7 @@ export default function PrivateChatScreen({ route, navigation }) {
 	/*RENDERIZA AS MENSAGENS E ACORDO COM O ENVIO DO REMENETENTE: UserMessage ou OtherMessage */
 	const renderItem = ({ item }) => {
 		return (
-				<View style={[styles.messageContainer, item.isSent ? styles.userMessage : styles.otherMessage]}>
+				<View style={[styles.messageContainer, item.EmissorId === myId ? styles.userMessage : styles.otherMessage]}>
 					{item.LocalizacaoMidia ? (
 					<Image 
 						source={{ uri: item.LocalizacaoMidia }}

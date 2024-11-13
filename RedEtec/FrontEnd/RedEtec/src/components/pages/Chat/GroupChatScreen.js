@@ -154,7 +154,7 @@ export default function GroupChatScreen({navigation, route}) {
 
     useEffect(() => {
 		fetchMessages();
-		fetchIntervalRef.current = setInterval(fetchMessages, 3000);
+		fetchIntervalRef.current = setInterval(fetchMessages, 300);
 		userLog();
 
 		return () => {

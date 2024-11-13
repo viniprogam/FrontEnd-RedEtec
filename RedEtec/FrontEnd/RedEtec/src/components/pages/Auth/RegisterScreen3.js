@@ -3,113 +3,40 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert, Image, Moda
 import { useNavigation, useRoute } from "@react-navigation/native";
 import { RadioButton } from 'react-native-paper';
 import axios from 'axios';
-import { Calendar, LocaleConfig } from "react-native-calendars";
-import { ptBR } from "../../utils/localeCalendarConfig";
 import { Feather } from "@expo/vector-icons";
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-LocaleConfig.locales["pt-br"] = ptBR;
-LocaleConfig.defaultLocale = "pt-br"
 
 export default function RegisterScreen3() {
     const [Email_Usuario, setEmail_Usuario] = useState('');
     const [CPF_Usuario, setCPF_Usuario] = useState('');
     const [Data_Nascimento_Usuario, setData_Nascimento_Usuario] = useState('');
     const [Nivel_Acesso, setNivel_Acesso] = useState(0);
-    const [openCalendar, setOpenCalendar] = useState(false);
-    const [errorMessage, setErrorMessage] = useState(''); // Mensagem de erro
-    const [selectedDay, setSelectedDay] = useState('');
-    const [selectedArea, setSelectedArea] = useState('Selecione a área'); // Área selecionada
+    const [errorMessage, setErrorMessage] = useState(''); 
+    const [selectedArea, setSelectedArea] = useState('Selecione a área'); 
     const [selectedAreaId, setSelectedAreaId] = useState(null);
-    const [showSelectOptions, setShowSelectOptions] = useState(false); // Controle de visibilidade do modal de opções
-
-    
+    const [showSelectOptions, setShowSelectOptions] = useState(false); 
 
     const handleAreaSelect = (area) => {
-        setSelectedArea(area.Nome_Curso); // Atualiza o nome da área selecionada
-        setSelectedAreaId(area.Id_Curso); // Salva o ID da área selecionada
-        setShowSelectOptions(false); // Esconde o menu após a seleção
+        setSelectedArea(area.Nome_Curso); 
+        setSelectedAreaId(area.Id_Curso); 
+        setShowSelectOptions(false); 
     };
 
     useEffect(() => {
-        console.log(selectedArea);  // Vai mostrar o valor atualizado de selectedArea
-        console.log(selectedAreaId);  // Vai mostrar o valor atualizado de selectedAreaId
+        console.log(selectedArea);  
+        console.log(selectedAreaId);  
     }, [selectedArea, selectedAreaId]);
-    
-
 
     const navigation = useNavigation();
     const route = useRoute();
     const { Nome_Usuario, Senha_Usuario, ProfileImage } = route.params;
 
-    console.log(ProfileImage)
-
-    const [currentYear, setCurrentYear] = useState('2018-01-01');
-    
-
-    const formatDate = (date) => {
-        const [day, month, year] = date.split('/');
-        return `${year}-${month}-${day}`;
-    };
-
-    const formattedDate = formatDate(selectedDay);
-
-    const formatToTwoDigits = (num) => (num < 10 ? `0${num}` : num);
-
-
-    const validateCPF = (cpf) => {
-        // Remove caracteres não numéricos
-        cpf = cpf.replace(/\D/g, '');
-
-        // CPF deve ter 11 dígitos
-        if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) {
-            return false;
-        }
-
-        // Cálculo do primeiro dígito verificador
-        let sum = 0;
-        for (let i = 0; i < 9; i++) {
-            sum += parseInt(cpf.charAt(i)) * (10 - i);
-        }
-        let firstDigit = (sum * 10) % 11;
-        if (firstDigit === 10 || firstDigit === 11) {
-            firstDigit = 0;
-        }
-
-        // Cálculo do segundo dígito verificador
-        sum = 0;
-        for (let i = 0; i < 10; i++) {
-            sum += parseInt(cpf.charAt(i)) * (11 - i);
-        }
-        let secondDigit = (sum * 10) % 11;
-        if (secondDigit === 10 || secondDigit === 11) {
-            secondDigit = 0;
-        }
-
-        return firstDigit === parseInt(cpf.charAt(9)) && secondDigit === parseInt(cpf.charAt(10));
-    };
-
-    const handleCpfChange = (text) => {
-        let formattedCpf = text.replace(/\D/g, '');
-        if (formattedCpf.length > 9) {
-            formattedCpf = formattedCpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
-        } else if (formattedCpf.length > 6) {
-            formattedCpf = formattedCpf.replace(/(\d{3})(\d{3})(\d{3})/, '$1.$2.$3');
-        } else if (formattedCpf.length > 3) {
-            formattedCpf = formattedCpf.replace(/(\d{3})(\d{3})/, '$1.$2');
-        }
-        setCPF_Usuario(formattedCpf);
-    };
-
-    
     const [communities, setCommunities] = useState([]);
-    
 
     const getCourse = async () => {
         try {
             const response = await axios.get('https://localhost:7140/api/Curso')
             setCommunities(response.data)
-            
         }
         catch(error) {
             console.error(error);
@@ -120,18 +47,12 @@ export default function RegisterScreen3() {
         getCourse();
     }, [])
 
-    console.log(communities)
-
-
     const handleRegister = async () => {
-
-        // console.log(ProfileImage) TESTE PARA VER SE A IMAGEM ESTAVA SENDO RECEBIDA
-
         if (!validateCPF(CPF_Usuario)) {
-            setErrorMessage("CPF inválido. Por favor, verifique o número informado."); // Atualiza a mensagem de erro
-            return; // Se o CPF for inválido, interrompe a execução da função
+            setErrorMessage("CPF inválido. Por favor, verifique o número informado.");
+            return; 
         } else {
-            setErrorMessage(''); // Limpa a mensagem de erro se o CPF for válido
+            setErrorMessage('');
         }
 
         try {
@@ -165,45 +86,52 @@ export default function RegisterScreen3() {
         }
     };
 
-    // const handlerProfileImage = async () => {
-    //     try {
-    //         const token = await AsyncStorage.getItem("token");
-    //         if (!token) {
-    //             Alert.alert('Erro', 'Token de autenticação não encontrado.');
-    //             return;
-    //         }
-    
-    //         // Verifique se a ProfileImage está presente
-    //         if (!ProfileImage) {
-    //             Alert.alert("Erro", "Foto de perfil não selecionada.");
-    //             return; // Se não houver foto, retorna e não realiza o cadastro
-    //         }
-    
-    //         // Envio do formulário incluindo a foto
-    //         const formData = new FormData();
-    //         formData.append('file', {
-    //             uri: ProfileImage,  // Usando ProfileImage diretamente
-    //             type: 'image/jpeg',  // Tipo MIME da imagem (ajuste conforme o tipo de imagem)
-    //             name: 'profile.jpg',  // Nome do arquivo
-    //         });
-    
-    //         axios.post('https://localhost:7140/api/Perfil', formData, {
-    //             headers: {
-    //                 Authorization: `Bearer ${token}`,
-    //                 'Content-Type': 'multipart/form-data',  // Definindo o tipo de mídia correto
-    //             }
-    //         })
-    //         .then(response => {
-    //             console.log('Imagem enviada com sucesso', response);
-    //         })
-    //         .catch(error => {
-    //             console.error('Erro ao enviar imagem', error);
-    //         });
-    //     }
-    //     catch (error) {
-    //         console.error('Erro ao enviar imagem:', error);
-    //     }
-    // }
+    const formatDate = (date) => {
+        const [day, month, year] = date.split('/');
+        return `${year}-${month}-${day}`;
+    };
+
+    const formatToTwoDigits = (num) => (num < 10 ? `0${num}` : num);
+
+    const handleCpfChange = (text) => {
+        let formattedCpf = text.replace(/\D/g, '');
+        if (formattedCpf.length > 9) {
+            formattedCpf = formattedCpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+        } else if (formattedCpf.length > 6) {
+            formattedCpf = formattedCpf.replace(/(\d{3})(\d{3})(\d{3})/, '$1.$2.$3');
+        } else if (formattedCpf.length > 3) {
+            formattedCpf = formattedCpf.replace(/(\d{3})(\d{3})/, '$1.$2');
+        }
+        setCPF_Usuario(formattedCpf);
+    };
+
+    const validateCPF = (cpf) => {
+        cpf = cpf.replace(/\D/g, '');
+        if (cpf.length !== 11 || /^(\d)\1+$/.test(cpf)) {
+            return false;
+        }
+
+        let sum = 0;
+        for (let i = 0; i < 9; i++) {
+            sum += parseInt(cpf.charAt(i)) * (10 - i);
+        }
+        let firstDigit = (sum * 10) % 11;
+        if (firstDigit === 10 || firstDigit === 11) {
+            firstDigit = 0;
+        }
+
+        sum = 0;
+        for (let i = 0; i < 10; i++) {
+            sum += parseInt(cpf.charAt(i)) * (11 - i);
+        }
+        let secondDigit = (sum * 10) % 11;
+        if (secondDigit === 10 || secondDigit === 11) {
+            secondDigit = 0;
+        }
+
+        return firstDigit === parseInt(cpf.charAt(9)) && secondDigit === parseInt(cpf.charAt(10));
+    };
+
     return (
         <View style={styles.container}>
             <View style={styles.imgContainer}>
@@ -236,52 +164,24 @@ export default function RegisterScreen3() {
                 </View>
                 <View style={styles.inputContainer}>
                     <Text style={styles.inputTitle}>Data de Nascimento</Text>
-                    <TouchableOpacity onPress={() => setOpenCalendar(true)}>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="DD/MM/AAAA"
-                            value={Data_Nascimento_Usuario}
-                            editable={false}
-                        />
-                    </TouchableOpacity>
-                </View>
-
-                {openCalendar && (
-                    <Calendar
-                        current={currentYear} // Adicionando a propriedade current
-                        onDayPress={(day) => {
-                            const formattedDay = formatToTwoDigits(day.day);
-                            const formattedMonth = formatToTwoDigits(day.month);
-                            setSelectedDay(`${day.year}-${formattedMonth}-${formattedDay}`);
-                            setOpenCalendar(false);
-                            setData_Nascimento_Usuario(`${formattedDay}/${formattedMonth}/${day.year}`);
+                    <TextInput
+                        style={styles.input}
+                        placeholder="DD/MM/AAAA"
+                        value={Data_Nascimento_Usuario}
+                        onChangeText={(text) => {
+                            if (text.length <= 10) {
+                                let formattedText = text.replace(/\D/g, '').slice(0, 8);
+                                if (formattedText.length >= 2) {
+                                    formattedText = `${formattedText.slice(0, 2)}/${formattedText.slice(2)}`;
+                                }
+                                if (formattedText.length >= 5) {
+                                    formattedText = `${formattedText.slice(0, 5)}/${formattedText.slice(5)}`;
+                                }
+                                setData_Nascimento_Usuario(formattedText);
+                            }
                         }}
-                        headerStyle={{
-                            borderBottomWidth: 0.4,
-                            borderBottomColor: "#000000", // Cor da borda inferior preta
-                            paddingBottom: 0,
-                            marginBottom: 0,
-                            backgroundColor: "transparent", // Fundo da header transparenter
-                            marginTop: -35,
-
-                        }}
-                        theme={{
-                            textMonthFontSize: 15,
-                            monthTextColor: "#000000", // Cor do texto do mês preto
-                            todayTextColor: "#000000", // Cor do texto do dia atual preto
-                            selectedDayBackgroundColor: "#FFFFFF", // Fundo do dia selecionado branco
-                            selectedDayTextColor: "#000000", // Texto do dia selecionado preto
-                            arrowColor: "#000000", // Cor das setas pretas
-                            calendarBackground: "transparent", // Fundo do calendário transparente
-                            textDayStyle: { color: "#000000" }, // Cor do texto dos dias pretos
-                            textDisabledColor: "#000000", // Cor do texto dos dias desabilitados preto
-
-                        }}
-                        minDate={'1950-01-01'} // Define a data mínima como 1 de janeiro de 1950
-                        maxDate={'2018-12-31'} // Define a data máxima como 31 de dezembro de 2018
                     />
-
-                )}
+                </View>
 
                 {/* Área de Seleção */}
                 <View style={styles.inputContainer}>
@@ -297,10 +197,10 @@ export default function RegisterScreen3() {
                     <View style={styles.modalContainer}>
                         <View style={styles.modalContent}>
                             <Text style={styles.selectTitle}>Selecione a Área</Text>
-                            {/* Renderizando cada curso da lista */}
+                            
                             {communities.map((area, index) => (
                                 <TouchableOpacity
-                                    key={area.Id_Curso}  // Usando Id_Curso como chave única
+                                    key={area.Id_Curso}
                                     style={styles.optionButton}
                                     onPress={() => handleAreaSelect(area)}
                                 >
@@ -318,8 +218,7 @@ export default function RegisterScreen3() {
             <TouchableOpacity
                 style={styles.button}
                 onPress={async () => {
-                    await handleRegister();  // Chama a função de registro de forma assíncrona
-                    //       // Chama a função de imagem de perfil de forma assíncrona
+                    await handleRegister();
                 }}
             >
                 <Text style={styles.buttonText}>Finalizar</Text>
@@ -327,6 +226,7 @@ export default function RegisterScreen3() {
         </View>
     );
 }
+
 
 const colors = {
     primary: '#040915',
