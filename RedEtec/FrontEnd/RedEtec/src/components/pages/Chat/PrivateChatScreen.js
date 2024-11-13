@@ -238,7 +238,7 @@ export default function PrivateChatScreen({ route, navigation }) {
 		} catch (error) {
 			Alert.alert('Erro', error.message || 'Não foi possível excluir a mensagem.');
 		}
-	};
+	};	
 	
 
 	const keyExtractor = (item) => {

@@ -87,7 +87,7 @@ export default function GroupChatScreen({navigation, route}) {
 			if (response.status === 200) {
 				if (Array.isArray(response.data)) {
 					const fetchedMessages = response.data.map(msg => ({
-						MensagemId: msg.MensagemId,
+						Id_Mensagem_Grupo: msg.Id_Mensagem_Grupo,
 						Id_Usuario_Emissor: msg.Id_Usuario_Emissor,
 						Mensagem: msg.Mensagem,
 						LocalizacaoMidia: msg.LocalizacaoMidia,
@@ -273,9 +273,41 @@ export default function GroupChatScreen({navigation, route}) {
 					<Text style={item.isSent ? styles.userText : styles.otherText}>
 					{item.Mensagem}
 					</Text>
+                    {(item.Id_Usuario_Emissor === myId || nivelDeAcesso === 1) && (
+					<TouchableOpacity style={styles.deleteButton} onPress={() => confirmDeleteMessage(item.Id_Mensagem_Grupo)}>
+						<Ionicons name="trash" style={styles.deleteButtonText} />
+					</TouchableOpacity>
+					)}
 				</View>
 			);
 	};
+
+    /*FUNÇÃO PARA DELETAR MENSAGENS */
+	const confirmDeleteMessage = (messageId) => {
+		setSelectedMessageId(messageId);
+        console.log(selectedMessageId)
+		setModalVisible(true);
+	};
+
+	const handlerDeleteMessage = async (messageId) => {
+		try {
+			const token = await AsyncStorage.getItem('token');
+			if (!token) {
+				throw new Error('Token não encontrado. Por favor, faça login novamente.');
+			}
+
+			await axios.delete(`https://localhost:7140/api/ChatGrupo/${messageId}`, {
+				headers: {
+					Authorization: `Bearer ${token}`,
+				}
+			});
+
+			// Remove a mensagem excluída do estado de mensagens
+			setMessages((prevMessages) => prevMessages.filter((msg) => msg.Id_Mensagem_Grupo !== messageId));
+		} catch (error) {
+			Alert.alert('Erro', error.message || 'Não foi possível excluir a mensagem.');
+		}
+	};	
 
 
     return (
@@ -323,9 +355,11 @@ export default function GroupChatScreen({navigation, route}) {
 				<TouchableOpacity onPress={handleSendMessage}>
 					<Ionicons name="send" size={15} color={colors.text} />
 				</TouchableOpacity>
-                <TouchableOpacity onPress={selectFileMessage}>
-					<Ionicons name="ellipsis-vertical" size={15} color={colors.text} />
-				</TouchableOpacity>
+                {(nivelDeAcesso === 1) && (
+                    <TouchableOpacity onPress={selectFileMessage}>
+					    <Ionicons name="ellipsis-vertical" size={15} color={colors.text} />
+				    </TouchableOpacity>
+                )}
             </View>
 
 
@@ -403,6 +437,8 @@ export default function GroupChatScreen({navigation, route}) {
 					</View>
 				</View>
 			</Modal>
+
+            
 
 
         </KeyboardAvoidingView>
@@ -582,4 +618,40 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         marginBottom: 10,
     },
+    modalView: {
+		marginTop: 200,
+		backgroundColor: 'white',
+		borderRadius: 20,
+		padding: 35,
+		alignItems: 'center',
+		shadowColor: '#000',
+		shadowOffset: {
+			width: 0,
+			height: 2,
+		},
+		shadowOpacity: 0.25,
+		shadowRadius: 4,
+		elevation: 5,
+	},
+    modalText: {
+		marginBottom: 15,
+		textAlign: 'center',
+	},
+    modalButtons: {
+		display: 'flex',
+        flexDirection: 'row',
+	},
+    button: {
+		width: 100,
+		borderRadius: 10,
+		padding: 10,
+		elevation: 2,
+		backgroundColor: colors.primary,
+		flex: 1,
+		marginHorizontal: 5,
+	},
+    buttonText: {
+		color: 'white',
+		textAlign: 'center',
+	},
 });
