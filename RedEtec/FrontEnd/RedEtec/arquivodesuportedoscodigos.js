@@ -1,3 +1,511 @@
+{/* tela que renderiza o nome do usuario que enviou a mensagem */}
+// import React, { useState, useEffect, useRef } from 'react';
+// import { 
+//     View, 
+//     Text, 
+//     StyleSheet, 
+//     TextInput, 
+//     TouchableOpacity, 
+//     FlatList, 
+//     Image, 
+//     ActivityIndicator, 
+//     KeyboardAvoidingView, 
+//     Platform, 
+//     Alert,
+//     Modal
+// } from 'react-native';
+// import * as ImagePicker from 'expo-image-picker';
+// import * as DocumentPicker from 'expo-document-picker';
+// import { Ionicons } from '@expo/vector-icons'; // Importando ícones
+// import avatar from '../../../../assets/perfil.png'
+// import axios from 'axios';
+// import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// const colors = {
+//     primary: '#040915',
+//     secondary: '#1E2A38',
+//     background: '#F4F4F4',
+//     text: '#FFFFFF',
+//     border: '#8A8F9E',
+//     messageUser: '#8A8F9E',
+//     messageOther: '#f1f1f1',
+//     modalBackground: 'rgba(0, 0, 0, 0.5)',
+//     modalContent: '#FFFFFF',
+// };
+
+// export default function GroupChatScreen({navigation, route}) {
+//     const {groupId, groupName} = route.params;
+
+//     const [message, setMessage] = useState('');
+//     const [messages, setMessages] = useState([]);
+//     const [loading, setLoading] = useState(true);
+//     const flatListRef = useRef(null);
+//     const fetchIntervalRef = useRef(null);
+
+//     const [isModalVisible, setIsModalVisible] = useState(false);
+//     const [isGroupInfoVisible, setIsGroupInfoVisible] = useState(false);
+//     const [modalFileVisible, setModalFileVisible] = useState(false);
+
+//     const [file, setFile] = useState(null);
+//     const [selectedImage, setSelectedImage] = useState(null);
+
+//     const [nivelDeAcesso, setNivelDeAcesso] = useState(null);
+//     const [myId, setMyId] = useState(null);
+//     const [myUsername, setMyUsername] = useState(null);
+//     const [names, setNames] = useState({}); // Armazena nomes dos usuários por ID
+
+//     const [modalVisible, setModalVisible] = useState(false);
+//     const [selectedMessageId, setSelectedMessageId] = useState(null);
+
+//     // Função para buscar o nome do usuário pelo ID
+//     const fetchSenderName = async (userId) => {
+//         if (names[userId]) {
+//             return names[userId];
+//         }
+
+//         try {
+//             const response = await axios.get(`https://localhost:7140/api/Usuario/${userId}`);
+//             const userName = response.data.Nome_Usuario;
+//             setNames((prevNames) => ({
+//                 ...prevNames,
+//                 [userId]: userName
+//             }));
+//             return userName;
+//         } catch (error) {
+//             console.error('Erro ao buscar nome do usuário:', error);
+//             return 'Desconhecido';
+//         }
+//     };
+
+//     // Função para carregar as mensagens
+//     const fetchMessages = async () => {
+//         try {
+//             const token = await AsyncStorage.getItem('token');
+//             if (!token) {
+//                 throw new Error('Token não encontrado. Por favor, faça login novamente.');
+//             }
+
+//             const response = await axios.get(`https://localhost:7140/api/ChatGrupo/${groupId}`, {
+//                 headers: {
+//                     Authorization: `Bearer ${token}`
+//                 }
+//             });
+
+//             if (response.status === 200) {
+//                 if (Array.isArray(response.data)) {
+//                     const fetchedMessages = await Promise.all(response.data.map(async (msg) => {
+//                         const senderName = await fetchSenderName(msg.Id_Usuario_Emissor);
+//                         return {
+//                             Id_Mensagem_Grupo: msg.Id_Mensagem_Grupo,
+//                             Id_Usuario_Emissor: msg.Id_Usuario_Emissor,
+//                             Mensagem: msg.Mensagem,
+//                             LocalizacaoMidia: msg.LocalizacaoMidia,
+//                             Timestamp: new Date(msg.Data_Enviada),
+//                             senderName,
+//                             isSent: msg.Id_Usuario_Emissor === myId
+//                         };
+//                     }));
+
+//                     setMessages(fetchedMessages.sort((a, b) => a.Timestamp - b.Timestamp));
+//                 } else {
+//                     Alert.alert('Erro', 'Formato inesperado de dados retornado da API.');
+//                 }
+//             } else {
+//                 throw new Error(`Erro ao buscar mensagens: ${response.status} - ${response.data}`);
+//             }
+//         } catch (error) {
+//             handleError(error);
+//         } finally {
+//             setLoading(false);
+//         }
+//     };
+
+//     const handleError = (error) => {
+//         if (error.response) {
+//             Alert.alert('Erro', error.response.data.message || 'Erro desconhecido no servidor.');
+//         } else {
+//             Alert.alert('Erro', error.message || 'Erro ao buscar mensagens.');
+//         }
+//     };
+
+//     // Função para buscar dados do usuário logado
+//     const userLog = async () => {
+//         try {
+//             const token = await AsyncStorage.getItem('token');
+//             if (!token) {
+//                 throw new Error('Token não encontrado. Por favor, faça login novamente.');
+//             }
+
+//             const response = await axios.get('https://localhost:7140/api/Usuario/getusuario', {
+//                 headers: {
+//                     Authorization: `Bearer ${token}`,
+//                     'Content-Type': 'application/json',
+//                 },
+//             });
+
+//             const user = response.data;
+
+//             if (user && user.Id_Usuario !== undefined && user.Nivel_Acesso !== undefined) {
+//                 setMyId(user.Id_Usuario);
+//                 setNivelDeAcesso(user.Nivel_Acesso);
+//                 setMyUsername(user.Nome_Usuario)
+//             } else {
+//                 throw new Error('Dados do usuário não encontrados na resposta.');
+//             }
+
+//         } catch (error) {
+//             console.error("Erro ao buscar usuário logado: ", error.message);
+//         }
+//     };
+
+//     useEffect(() => {
+//         fetchMessages();
+//         fetchIntervalRef.current = setInterval(fetchMessages, 300);
+//         userLog();
+
+//         return () => {
+//             clearInterval(fetchIntervalRef.current);
+//         };
+//     }, [groupId]);
+
+//     // Função para enviar mensagens
+//     const handleSendMessage = async () => {
+//         if(message.trim()) {
+//             try {
+//                 setLoading(true);
+//                 const token = await AsyncStorage.getItem('token');
+//                 if(!token) {
+//                     throw new Error('Token não encontrado. Por favor, faça login novamente.');
+//                 }
+//                 const response = await axios.post('https://localhost:7140/api/ChatGrupo',
+//                     {
+//                         Id_Grupo: groupId,
+//                         Mensagem: message.trim(),
+//                     },
+//                     {
+//                         headers: {
+//                             Authorization: `Bearer ${token}`,
+//                             'Content-Type': 'application/json',
+//                         }
+//                     }
+//                 );
+
+//                 if (response.status === 200) {
+//                     const newMessage = {
+//                         Id_Grupo: groupId,
+//                         Mensagem: message.trim(),
+//                         LocalizacaoMidia: null,
+//                         Timestamp: new Date(),
+//                         isSent: true
+//                     };
+//                     setMessages(prevMessages => [...prevMessages, newMessage]);
+//                     setMessage('');
+//                     flatListRef.current.scrollToEnd({ animated: true });
+//                 } else {
+//                     throw new Error('Não foi possível enviar a mensagem. Tente novamente.');
+//                 }
+//             } catch(err) {
+//                 Alert.alert('Erro', err.message || 'Não foi possível enviar a mensagem. Tente novamente.');
+//             } finally {
+//                 setLoading(false);
+//             }
+//         } else {
+//             Alert.alert('Mensagem vazia', 'Por favor, digite uma mensagem antes de enviar.');
+//         }
+//     };
+
+//     const keyExtractor = (item) => {
+//         return item.Timestamp instanceof Date && !isNaN(item.Timestamp.getTime()) 
+//             ? item.Timestamp.toISOString() 
+//             : String(Math.random());
+//     };
+
+//     if (loading) {
+//         return <ActivityIndicator size="large" color={colors.primary} />;
+//     }
+
+//     const selectFileMessage = () => {
+//         setModalFileVisible(true);
+//     };
+
+//     const pickImage = async () => {
+//         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+//         if (status !== 'granted') {
+//             alert('Desculpe, precisamos de permissão para acessar a galeria!');
+//             return;
+//         }
+
+//         const result = await ImagePicker.launchImageLibraryAsync({
+//             mediaTypes: ImagePicker.MediaTypeOptions.Images,
+//             allowsEditing: true,
+//             aspect: [4, 3],
+//             quality: 1,
+//         });
+
+//         if (!result.canceled) {
+//             setFile(result.assets[0]);
+//             setModalFileVisible(false)
+//         }
+//     };
+
+//     const pickDocument = async () => {
+//         const result = await DocumentPicker.getDocumentAsync({
+//             type: '*/*', // Aceita qualquer tipo de arquivo
+//             copyToCacheDirectory: true,
+//         });
+
+//         if (result.type === 'success') {
+//             setFile(result);
+//             setModalFileVisible(false);
+//         }
+//     };
+
+//     const handleDeleteMessage = async (messageId) => {
+//         const token = await AsyncStorage.getItem('token');
+//         if (!token) {
+//             throw new Error('Token não encontrado. Por favor, faça login novamente.');
+//         }
+
+//         try {
+//             const response = await axios.delete(`https://localhost:7140/api/ChatGrupo/${messageId}`, {
+//                 headers: {
+//                     Authorization: `Bearer ${token}`,
+//                 },
+//             });
+
+//             if (response.status === 200) {
+//                 setMessages(prevMessages => prevMessages.filter(msg => msg.Id_Mensagem_Grupo !== messageId));
+//                 setModalVisible(false);
+//             } else {
+//                 throw new Error('Não foi possível excluir a mensagem.');
+//             }
+//         } catch (error) {
+//             console.error('Erro ao excluir mensagem:', error);
+//             Alert.alert('Erro', 'Não foi possível excluir a mensagem.');
+//         }
+//     };
+
+//     return (
+//         <KeyboardAvoidingView
+//             style={styles.container}
+//             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+//             keyboardVerticalOffset={90}
+//         >
+//             <View style={styles.header}>
+//                 <TouchableOpacity onPress={() => navigation.goBack()}>
+//                     <Ionicons name="arrow-back" size={24} color={colors.text} />
+//                 </TouchableOpacity>
+//                 <Text style={styles.title}>{groupName}</Text>
+//                 <TouchableOpacity onPress={() => setIsGroupInfoVisible(!isGroupInfoVisible)}>
+//                     <Ionicons name="information-circle-outline" size={24} color={colors.text} />
+//                 </TouchableOpacity>
+//             </View>
+
+//             <FlatList
+//                 ref={flatListRef}
+//                 data={messages}
+//                 keyExtractor={keyExtractor}
+//                 renderItem={({ item }) => (
+//                     <View style={[styles.messageContainer, item.isSent ? styles.sentMessage : styles.receivedMessage]}>
+//                         {!item.isSent && (
+//                             <Text style={styles.senderName}>{item.senderName}</Text>
+//                         )}
+//                         <Text style={styles.messageText}>{item.Mensagem}</Text>
+//                         {item.LocalizacaoMidia && (
+//                             <Image source={{ uri: item.LocalizacaoMidia }} style={styles.messageImage} />
+//                         )}
+//                         <Text style={styles.timestamp}>
+//                             {item.Timestamp.toLocaleString()}
+//                         </Text>
+//                         {item.isSent || nivelDeAcesso === 1 ? (
+//                             <TouchableOpacity
+//                                 onPress={() => {
+//                                     setSelectedMessageId(item.Id_Mensagem_Grupo);
+//                                     setModalVisible(true);
+//                                 }}
+//                             >
+//                                 <Ionicons name="trash-outline" size={16} color={colors.text} />
+//                             </TouchableOpacity>
+//                         ) : null}
+//                     </View>
+//                 )}
+//             />
+
+//             <View style={styles.footer}>
+//                 <TextInput
+//                     style={styles.input}
+//                     placeholder="Digite uma mensagem..."
+//                     placeholderTextColor={colors.border}
+//                     value={message}
+//                     onChangeText={setMessage}
+//                 />
+//                 <TouchableOpacity onPress={handleSendMessage}>
+//                     <Ionicons name="send" size={24} color={colors.primary} />
+//                 </TouchableOpacity>
+//                 <TouchableOpacity onPress={selectFileMessage}>
+//                     <Ionicons name="attach" size={24} color={colors.primary} />
+//                 </TouchableOpacity>
+//             </View>
+
+//             <Modal visible={modalFileVisible} animationType="slide" transparent={true}>
+//                 <View style={styles.modalContainer}>
+//                     <View style={styles.modalContent}>
+//                         <Text style={styles.modalTitle}>Selecione um Arquivo</Text>
+//                         <TouchableOpacity style={styles.modalButton} onPress={pickImage}>
+//                             <Ionicons name="image-outline" size={24} color={colors.primary} />
+//                             <Text style={styles.modalButtonText}>Imagem</Text>
+//                         </TouchableOpacity>
+//                         <TouchableOpacity style={styles.modalButton} onPress={pickDocument}>
+//                             <Ionicons name="document-outline" size={24} color={colors.primary} />
+//                             <Text style={styles.modalButtonText}>Documento</Text>
+//                         </TouchableOpacity>
+//                         <TouchableOpacity style={[styles.modalButton, styles.modalCancelButton]} onPress={() => setModalFileVisible(false)}>
+//                             <Ionicons name="close" size={24} color={colors.primary} />
+//                             <Text style={styles.modalButtonText}>Cancelar</Text>
+//                         </TouchableOpacity>
+//                     </View>
+//                 </View>
+//             </Modal>
+
+//             <Modal visible={modalVisible} animationType="slide" transparent={true}>
+//                 <View style={styles.modalContainer}>
+//                     <View style={styles.modalContent}>
+//                         <Text style={styles.modalTitle}>Confirmar Exclusão</Text>
+//                         <Text style={styles.modalMessage}>Deseja realmente excluir esta mensagem?</Text>
+//                         <TouchableOpacity
+//                             style={[styles.modalButton, styles.confirmDeleteButton]}
+//                             onPress={() => handleDeleteMessage(selectedMessageId)}
+//                         >
+//                             <Text style={styles.modalButtonText}>Excluir</Text>
+//                         </TouchableOpacity>
+//                         <TouchableOpacity
+//                             style={[styles.modalButton, styles.modalCancelButton]}
+//                             onPress={() => setModalVisible(false)}
+//                         >
+//                             <Text style={styles.modalButtonText}>Cancelar</Text>
+//                         </TouchableOpacity>
+//                     </View>
+//                 </View>
+//             </Modal>
+//         </KeyboardAvoidingView>
+//     );
+// }
+
+// const styles = StyleSheet.create({
+//     container: {
+//         flex: 1,
+//         backgroundColor: colors.background,
+//     },
+//     header: {
+//         flexDirection: 'row',
+//         alignItems: 'center',
+//         justifyContent: 'space-between',
+//         backgroundColor: colors.primary,
+//         padding: 10,
+//     },
+//     title: {
+//         fontSize: 18,
+//         color: colors.text,
+//         fontWeight: 'bold',
+//     },
+//     messageContainer: {
+//         margin: 5,
+//         padding: 10,
+//         borderRadius: 10,
+//         maxWidth: '80%',
+//     },
+//     sentMessage: {
+//         alignSelf: 'flex-end',
+//         backgroundColor: colors.messageUser,
+//     },
+//     receivedMessage: {
+//         alignSelf: 'flex-start',
+//         backgroundColor: colors.messageOther,
+//     },
+//     messageText: {
+//         fontSize: 16,
+//         color: colors.text,
+//     },
+//     messageImage: {
+//         width: 200,
+//         height: 200,
+//         borderRadius: 10,
+//         marginTop: 5,
+//     },
+//     timestamp: {
+//         fontSize: 10,
+//         color: colors.text,
+//         marginTop: 5,
+//         textAlign: 'right',
+//     },
+//     senderName: {
+//         fontSize: 12,
+//         color: colors.primary,
+//         fontWeight: 'bold',
+//     },
+//     footer: {
+//         flexDirection: 'row',
+//         alignItems: 'center',
+//         padding: 10,
+//         backgroundColor: colors.secondary,
+//     },
+//     input: {
+//         flex: 1,
+//         backgroundColor: colors.background,
+//         color: colors.text,
+//         paddingHorizontal: 10,
+//         borderRadius: 20,
+//         marginRight: 10,
+//     },
+//     modalContainer: {
+//         flex: 1,
+//         justifyContent: 'center',
+//         alignItems: 'center',
+//         backgroundColor: colors.modalBackground,
+//     },
+//     modalContent: {
+//         backgroundColor: colors.modalContent,
+//         padding: 20,
+//         borderRadius: 10,
+//         width: '80%',
+//         alignItems: 'center',
+//     },
+//     modalTitle: {
+//         fontSize: 18,
+//         fontWeight: 'bold',
+//         marginBottom: 20,
+//         color: colors.primary,
+//     },
+//     modalButton: {
+//         flexDirection: 'row',
+//         alignItems: 'center',
+//         padding: 10,
+//         borderRadius: 10,
+//         width: '100%',
+//         justifyContent: 'center',
+//         marginVertical: 5,
+//     },
+//     modalButtonText: {
+//         fontSize: 16,
+//         color: colors.primary,
+//         marginLeft: 10,
+//     },
+//     modalCancelButton: {
+//         backgroundColor: colors.secondary,
+//     },
+//     confirmDeleteButton: {
+//         backgroundColor: 'red',
+//     },
+//     modalMessage: {
+//         fontSize: 16,
+//         marginBottom: 20,
+//         color: colors.primary,
+//     },
+// });
+
+
+
+
 {/*TELA CRIADA PELO CHAT GPT CRIA A OPÇÃO DE RESPOSTA DA CONVERSA */}
 
 

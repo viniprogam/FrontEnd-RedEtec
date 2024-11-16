@@ -63,6 +63,7 @@ export default function GroupChatScreen({navigation, route}) {
     const [nivelDeAcesso, setNivelDeAcesso] = useState(null);
     const [myId, setMyId] = useState(null);
     const [myUsername, setMyUsername] = useState(null);
+    const {names, setNames} = useState([]);
 
     const [modalVisible, setModalVisible] = useState(false);
 	const [selectedMessageId, setSelectedMessageId] = useState(null);
@@ -156,11 +157,21 @@ export default function GroupChatScreen({navigation, route}) {
 		fetchMessages();
 		fetchIntervalRef.current = setInterval(fetchMessages, 300);
 		userLog();
+        getSenderName();
 
 		return () => {
 			clearInterval(fetchIntervalRef.current);
 		};
 	}, [groupId]);
+
+    /*FUNÇÃO PARA PEGAR O NOME DO USUARIO QUE ENVIOU A MENSAGEM */
+    const getSenderName = async () => {
+        const senderId = message.Id_Usuario_Emissor;
+
+        const response = await axios.get(`https://localhost:7140/api/Usuario/${senderId}`);
+        setNames(response.data.Nome_Usuario)
+        console.log(names)
+    }
 
     /*FUNÇÃO PARA ENVIAS AS MENSAGENS */
 	const handleSendMessage = async () => {
@@ -515,7 +526,7 @@ const styles = StyleSheet.create({
         color: colors.primary,
     },
     otherText: {
-        color: '#000',
+        color: colors.text,
     },
     inputContainer: {
 		flexDirection: 'row',
