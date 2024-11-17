@@ -1,18 +1,17 @@
-// src/pages/Chat/GroupChatScreen.js
 import React, { useState, useEffect, useRef } from 'react';
 import { 
     View, 
-	Text, 
-	StyleSheet, 
-	TextInput, 
-	TouchableOpacity, 
-	FlatList, 
-	Image, 
-	ActivityIndicator, 
-	KeyboardAvoidingView, 
-	Platform, 
-	Alert,
-	Modal
+    Text, 
+    StyleSheet, 
+    TextInput, 
+    TouchableOpacity, 
+    FlatList, 
+    Image, 
+    ActivityIndicator, 
+    KeyboardAvoidingView, 
+    Platform, 
+    Alert,
+    Modal
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
@@ -33,25 +32,14 @@ const colors = {
     modalContent: '#FFFFFF',
 };
 
-const dummyConversation = {
-    avatar: { uri: avatar },
-    description: 'Este é um grupo de teste para fins de demonstração.',
-    members: ['Usuário 1', 'Usuário 2', 'Usuário 3'],
-    messages: [
-        { text: 'Olá, pessoal!', sender: 'user' },
-        { text: 'Oi! Tudo bem?', sender: 'other' },
-        { text: 'Tudo ótimo, e você?', sender: 'user' },
-    ],
-};
-
 export default function GroupChatScreen({navigation, route}) {
     const {groupId, groupName} = route.params;
 
     const [message, setMessage] = useState('');
     const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState(true);
-	const flatListRef = useRef(null);
-	const fetchIntervalRef = useRef(null);
+    const flatListRef = useRef(null);
+    const fetchIntervalRef = useRef(null);
 
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [isGroupInfoVisible, setIsGroupInfoVisible] = useState(false);
@@ -63,65 +51,83 @@ export default function GroupChatScreen({navigation, route}) {
     const [nivelDeAcesso, setNivelDeAcesso] = useState(null);
     const [myId, setMyId] = useState(null);
     const [myUsername, setMyUsername] = useState(null);
-    const {names, setNames} = useState([]);
+    const [names, setNames] = useState({}); // Armazena nomes dos usuários por ID
 
     const [modalVisible, setModalVisible] = useState(false);
-	const [selectedMessageId, setSelectedMessageId] = useState(null);
+    const [selectedMessageId, setSelectedMessageId] = useState(null);
 
+    // Função para buscar o nome do usuário pelo ID
+    const fetchSenderName = async (userId) => {
+        if (names[userId]) {
+            return names[userId];
+        }
 
-    /*FUNÇÃO PARA CARREGAR OS MENSAGENS */
-	const fetchMessages = async () => {
-		try {
-			const token = await AsyncStorage.getItem('token');
-			if (!token) {
-				throw new Error('Token não encontrado. Por favor, faça login novamente.');
-			}
+        try {
+            const response = await axios.get(`https://localhost:7140/api/Usuario/${userId}`);
+            const userName = response.data.Nome_Usuario;
+            setNames((prevNames) => ({
+                ...prevNames,
+                [userId]: userName
+            }));
+            return userName;
+        } catch (error) {
+            console.error('Erro ao buscar nome do usuário:', error);
+            return 'Desconhecido';
+        }
+    };
 
-			const response = await axios.get(`https://localhost:7140/api/ChatGrupo/${groupId}`, {
-				headers: {
-					Authorization: `Bearer ${token}`
-				}
-			});
+    // Função para carregar as mensagens
+    const fetchMessages = async () => {
+        try {
+            const token = await AsyncStorage.getItem('token');
+            if (!token) {
+                throw new Error('Token não encontrado. Por favor, faça login novamente.');
+            }
 
-			console.log(response)
+            const response = await axios.get(`https://localhost:7140/api/ChatGrupo/${groupId}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
 
-			if (response.status === 200) {
-				if (Array.isArray(response.data)) {
-					const fetchedMessages = response.data.map(msg => ({
-						Id_Mensagem_Grupo: msg.Id_Mensagem_Grupo,
-						Id_Usuario_Emissor: msg.Id_Usuario_Emissor,
-						Mensagem: msg.Mensagem,
-						LocalizacaoMidia: msg.LocalizacaoMidia,
-						Timestamp: new Date(msg.Data_Mensagem),
-						isSent: msg.Id_Usuario_Emissor === myId
-					}));
+            if (response.status === 200) {
+                if (Array.isArray(response.data)) {
+                    const fetchedMessages = await Promise.all(response.data.map(async (msg) => {
+                        const senderName = await fetchSenderName(msg.Id_Usuario_Emissor);
+                        return {
+                            Id_Mensagem_Grupo: msg.Id_Mensagem_Grupo,
+                            Id_Usuario_Emissor: msg.Id_Usuario_Emissor,
+                            Mensagem: msg.Mensagem,
+                            LocalizacaoMidia: msg.LocalizacaoMidia,
+                            Timestamp: new Date(msg.Data_Enviada),
+                            senderName,
+                            isSent: msg.Id_Usuario_Emissor === myId
+                        };
+                    }));
 
-					// Atualiza o estado com as mensagens mais recentes
-					setMessages(fetchedMessages.sort((a, b) => a.Timestamp - b.Timestamp));
-				} else {
-					Alert.alert('Erro', 'Formato inesperado de dados retornado da API.');
-				}
-			} else {
-				throw new Error(`Erro ao buscar mensagens: ${response.status} - ${response.data}`);
-			}
-		} catch (error) {
-			handleError(error);
-		} finally {
-			setLoading(false);
-		}
-	};
+                    setMessages(fetchedMessages.sort((a, b) => a.Timestamp - b.Timestamp));
+                } else {
+                    Alert.alert('Erro', 'Formato inesperado de dados retornado da API.');
+                }
+            } else {
+                throw new Error(`Erro ao buscar mensagens: ${response.status} - ${response.data}`);
+            }
+        } catch (error) {
+            handleError(error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
     const handleError = (error) => {
-		if (error.response) {
-			Alert.alert('Erro', error.response.data.message || 'Erro desconhecido no servidor.');
-		} else {
-			Alert.alert('Erro', error.message || 'Erro ao buscar mensagens.');
-		}
-	};
+        if (error.response) {
+            Alert.alert('Erro', error.response.data.message || 'Erro desconhecido no servidor.');
+        } else {
+            Alert.alert('Erro', error.message || 'Erro ao buscar mensagens.');
+        }
+    };
 
-
-    
-    /*FUNÇÃO PARA BUSCAR DADOS DO USUÁRIO LOGADO*/
+    // Função para buscar dados do usuário logado
     const userLog = async () => {
         try {
             const token = await AsyncStorage.getItem('token');
@@ -138,8 +144,6 @@ export default function GroupChatScreen({navigation, route}) {
 
             const user = response.data;
 
-            console.log(user);
-
             if (user && user.Id_Usuario !== undefined && user.Nivel_Acesso !== undefined) {
                 setMyId(user.Id_Usuario);
                 setNivelDeAcesso(user.Nivel_Acesso);
@@ -154,27 +158,17 @@ export default function GroupChatScreen({navigation, route}) {
     };
 
     useEffect(() => {
-		fetchMessages();
-		fetchIntervalRef.current = setInterval(fetchMessages, 300);
-		userLog();
-        getSenderName();
+        fetchMessages();
+        fetchIntervalRef.current = setInterval(fetchMessages, 300);
+        userLog();
 
-		return () => {
-			clearInterval(fetchIntervalRef.current);
-		};
-	}, [groupId]);
+        return () => {
+            clearInterval(fetchIntervalRef.current);
+        };
+    }, [groupId]);
 
-    /*FUNÇÃO PARA PEGAR O NOME DO USUARIO QUE ENVIOU A MENSAGEM */
-    const getSenderName = async () => {
-        const senderId = message.Id_Usuario_Emissor;
-
-        const response = await axios.get(`https://localhost:7140/api/Usuario/${senderId}`);
-        setNames(response.data.Nome_Usuario)
-        console.log(names)
-    }
-
-    /*FUNÇÃO PARA ENVIAS AS MENSAGENS */
-	const handleSendMessage = async () => {
+    // Função para enviar mensagens
+    const handleSendMessage = async () => {
         if(message.trim()) {
             try {
                 setLoading(true);
@@ -194,46 +188,44 @@ export default function GroupChatScreen({navigation, route}) {
                         }
                     }
                 );
-                
 
                 if (response.status === 200) {
-					const newMessage = {
+                    const newMessage = {
                         Id_Grupo: groupId,
-						Mensagem: message.trim(),
-						LocalizacaoMidia: null,
-						Timestamp: new Date(),
-						isSent: true
-					};
+                        Mensagem: message.trim(),
+                        LocalizacaoMidia: null,
+                        Timestamp: new Date(),
+                        isSent: true
+                    };
                     setMessages(prevMessages => [...prevMessages, newMessage]);
-					setMessage('');
-					flatListRef.current.scrollToEnd({ animated: true });
+                    setMessage('');
+                    flatListRef.current.scrollToEnd({ animated: true });
                 } else {
-					throw new Error('Não foi possível enviar a mensagem. Tente novamente.');
-				}
+                    throw new Error('Não foi possível enviar a mensagem. Tente novamente.');
+                }
             } catch(err) {
                 Alert.alert('Erro', err.message || 'Não foi possível enviar a mensagem. Tente novamente.');
             } finally {
-				setLoading(false);
-			}
+                setLoading(false);
+            }
         } else {
-			Alert.alert('Mensagem vazia', 'Por favor, digite uma mensagem antes de enviar.');
-		}
+            Alert.alert('Mensagem vazia', 'Por favor, digite uma mensagem antes de enviar.');
+        }
     };
 
     const keyExtractor = (item) => {
-		return item.Timestamp instanceof Date && !isNaN(item.Timestamp.getTime()) 
-			? item.Timestamp.toISOString() 
-			: String(Math.random());
-	};
+        return item.Timestamp instanceof Date && !isNaN(item.Timestamp.getTime()) 
+            ? item.Timestamp.toISOString() 
+            : String(Math.random());
+    };
 
     if (loading) {
-		return <ActivityIndicator size="large" color={colors.primary} />;
-	}
+        return <ActivityIndicator size="large" color={colors.primary} />;
+    }
 
     const selectFileMessage = () => {
-		setModalFileVisible(true);
-	};
-    
+        setModalFileVisible(true);
+    };
 
     const pickImage = async () => {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -261,37 +253,15 @@ export default function GroupChatScreen({navigation, route}) {
             copyToCacheDirectory: true,
         });
 
-        // Verifica se a seleção foi bem-sucedida
         if (result.type === 'success') {
-            console.log(result.uri); // Mostra o URI do arquivo no console
-            setFile(result.uri); // Armazena o arquivo no estado
-            
-        } else {
-            Alert.alert('Falha ao selecionar o documento.');
+            setFile(result);
             setModalFileVisible(false);
         }
+        if (!result.canceled) {
+            setFile(result.assets[0]);
+            setModalFileVisible(false)
+        }
     };
-
-    const renderItem = ({ item }) => {
-		return (
-				<View style={[styles.messageContainer, item.Id_Usuario_Emissor === myId ? styles.userMessage : styles.otherMessage]}>
-					{item.LocalizacaoMidia ? (
-					<Image 
-						source={{ uri: item.LocalizacaoMidia }}
-						style={styles.messageImage}
-					/>
-					) : null}
-					<Text style={item.isSent ? styles.userText : styles.otherText}>
-					{item.Mensagem}
-					</Text>
-                    {(item.Id_Usuario_Emissor === myId || nivelDeAcesso === 1) && (
-					<TouchableOpacity style={styles.deleteButton} onPress={() => confirmDeleteMessage(item.Id_Mensagem_Grupo)}>
-						<Ionicons name="trash" style={styles.deleteButtonText} />
-					</TouchableOpacity>
-					)}
-				</View>
-			);
-	};
 
     /*FUNÇÃO PARA DELETAR MENSAGENS */
 	const confirmDeleteMessage = (messageId) => {
@@ -320,6 +290,35 @@ export default function GroupChatScreen({navigation, route}) {
 		}
 	};	
 
+    const renderItem = ({ item }) => {
+		return (
+				<View style={[styles.messageContainer, item.Id_Usuario_Emissor === myId ? styles.userMessage : styles.otherMessage]}>
+                    <View style={styles.messageinfs}>
+                        {!item.myId && (
+                                <Text style={styles.senderName}>{item.senderName}</Text>
+                            )}
+                        {item.LocalizacaoMidia ? (
+                        <Image 
+                            source={{ uri: item.LocalizacaoMidia }}
+                            style={styles.messageImage}
+                        />
+                        ) : null}
+                        <Text style={item.isSent ? styles.userText : styles.otherText}>
+                        {item.Mensagem}
+                        </Text>
+                        <Text style={styles.timestamp}>
+                            {item.Timestamp.toLocaleString()}
+                        </Text>
+                    </View>
+                    {(item.Id_Usuario_Emissor === myId || nivelDeAcesso === 1) && (
+					<TouchableOpacity style={styles.deleteButton} onPress={() => confirmDeleteMessage(item.Id_Mensagem_Grupo)}>
+						<Ionicons name="trash" style={styles.deleteButtonText} />
+					</TouchableOpacity>
+					)}
+				</View>
+			);
+	};
+
 
     return (
         <KeyboardAvoidingView 
@@ -335,7 +334,7 @@ export default function GroupChatScreen({navigation, route}) {
                 </TouchableOpacity>
                 {/* Imagem do Grupo */}
                 <Image 
-                    source={dummyConversation.avatar} 
+                    source={avatar} 
                     style={styles.avatarHeader} 
                 />
                 {/* Nome da Conversa com funcionalidade de clique */}
@@ -386,20 +385,6 @@ export default function GroupChatScreen({navigation, route}) {
                     activeOpacity={1} 
                     onPressOut={() => setIsGroupInfoVisible(false)}
                 >
-                    <View style={styles.modalContent}>
-                        <Text style={styles.modalTitle}>{dummyConversation.name}</Text>
-                        <Text style={styles.modalDescription}>{dummyConversation.description}</Text>
-                        <Text style={styles.modalMembersTitle}>Integrantes:</Text>
-                        {dummyConversation.members.map((member, index) => (
-                            <Text key={index} style={styles.modalMember}>{member}</Text>
-                        ))}
-                        <TouchableOpacity 
-                            style={styles.closeButton} 
-                            onPress={() => setIsGroupInfoVisible(false)}
-                        >
-                            <Text style={styles.closeButtonText}>Fechar</Text>
-                        </TouchableOpacity>
-                    </View>
                 </TouchableOpacity>
             </Modal>
 
@@ -665,4 +650,19 @@ const styles = StyleSheet.create({
 		color: 'white',
 		textAlign: 'center',
 	},
+    senderName: {
+        fontSize: 14,
+        color: colors.border,
+        fontWeight: 'bold',
+    },
+    messageinfs: {
+        display: 'flex',
+        flexDirection: 'column'
+    },
+    timestamp: {
+        fontSize: 10,
+        color: colors.text,
+        marginTop: 5,
+        textAlign: 'right',
+    },
 });

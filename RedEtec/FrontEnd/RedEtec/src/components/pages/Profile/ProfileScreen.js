@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput, Modal, Button, Alert } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, TextInput, Modal, Button, Alert, Platform } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { useUserProfile } from '../../context/UserProfileContext';
 import axios from 'axios';
-import { Ionicons } from '@expo/vector-icons';
+import { MaterialIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const colors = {
@@ -22,8 +22,11 @@ export default function ProfileScreen({route, navigation}) {
     /*DADOS DO USUÁRIO LOGADO */
     const [nivelDeAcesso, setNivelDeAcesso] = useState(null);
     const [myId, setMyId] = useState(null);
+    const [perfil, setPerfil] = useState(null);
     const [myUsername, setMyUsername] = useState(null);
     const [supportModalVisible, setSupportModalVisible] = useState(false);
+    const [profileImage, setProfileImage] = useState({ profileImage: null });
+    const [file, setFile] = useState(null);
 
     /*FUNÇÃO PARA ATUALIZAR O NOME */
     const handleEditProfile = async () => {
@@ -52,6 +55,8 @@ export default function ProfileScreen({route, navigation}) {
         }
     };
 
+
+
     /*FUNÇÃO PARA BUSCAR DADOS DO USUÁRIO LOGADO*/
     const userLog = async () => {
         try {
@@ -70,6 +75,7 @@ export default function ProfileScreen({route, navigation}) {
             const user = response.data;
 
             console.log(user);
+            setPerfil(response.data)
 
             if (user && user.Id_Usuario !== undefined && user.Nivel_Acesso !== undefined) {
                 setMyId(user.Id_Usuario);
@@ -88,21 +94,102 @@ export default function ProfileScreen({route, navigation}) {
         userLog();
     }, []);
 
-    const pickImage = async () => {
-        const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            aspect: [4, 3],
-            quality: 1,
-        });
+    // Solicitar permissões para acessar a galeria de imagens no dispositivo
+    useEffect(() => {
+        (async () => {
+            if (Platform.OS !== 'web') {
+                const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+                if (status !== 'granted') {
+                    alert('Desculpe, precisamos de permissão para acessar as fotos para que isso funcione!');
+                }
+            }
+        })();
+    }, []);
 
-        if (!result.canceled) {
-            setProfile(prevProfile => ({
-                ...prevProfile,
-                profileImage: result.assets[0].uri
-            }));
+    // Função para selecionar uma imagem
+    const pickImage = async () => {
+        if (Platform.OS === 'web') {
+            // Lógica específica para a versão web, criando um input file
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.onchange = (event) => {
+                const selectedFile = event.target.files[0];
+                if (selectedFile) {
+                    const fileObj = {
+                        uri: URL.createObjectURL(selectedFile),
+                        name: selectedFile.name,
+                        type: selectedFile.type,
+                        file: selectedFile, // Adicionando o arquivo ao estado
+                    };
+                    setFile(fileObj); // Atualiza o estado com o arquivo selecionado
+                    setProfileImage({ profileImage: fileObj.uri }); // Atualiza o estado da imagem com o URI
+                    console.log('Arquivo selecionado:', fileObj);
+                    handlerProfileImage(fileObj);
+                }
+            };
+            input.click();
+        } else {
+            // Para dispositivos móveis, usa o ImagePicker
+            const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ImagePicker.MediaTypeOptions.Images,
+                allowsEditing: true,
+                aspect: [1, 1],
+                quality: 1,
+            });
+
+            if (!result.cancelled) {
+                // Atualiza o estado com o URI da imagem selecionada
+                const fileObj = {
+                    uri: result.uri,
+                    name: result.uri.split('/').pop(), // Extrai o nome do arquivo do URI
+                    type: result.type === 'image' ? 'image/jpeg' : '', // Assumindo que a imagem será do tipo JPEG
+                    file: result, // Adicionando o objeto `result` ao estado
+                };
+                setFile(fileObj); // Atualiza o estado com o arquivo
+                setProfileImage({ profileImage: result.uri }); // Atualiza o estado da imagem com o URI
+                console.log('Imagem selecionada:', fileObj);
+                handlerProfileImage(fileObj);
+            } else {
+                Alert.alert('Imagem não selecionada', 'Você não escolheu nenhuma imagem.');
+            }
         }
     };
+
+    const handlerProfileImage = async (fileObj) => {
+        const formData = new FormData();
+    
+        // Converta o objeto Blob para um formato que o FormData aceite
+        const file = {
+            uri: fileObj.uri,
+            name: fileObj.name,
+            type: fileObj.type || 'image/png'
+        };
+    
+        // Adiciona o arquivo ao FormData
+        formData.append('file', file);
+    
+        try {
+            const token = await AsyncStorage.getItem("token");
+            if (!token) {
+                Alert.alert('Erro', 'Token de autenticação não encontrado.');
+                return;
+            }
+    
+            const response = await axios.post('https://localhost:7140/api/Perfil', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                    'Authorization': `Bearer ${token}`,
+                }
+            });
+    
+            // Sucesso, faça algo com a resposta
+            console.log('Imagem salva com sucesso:', response);
+        } catch (error) {
+            console.error('Erro ao enviar imagem:', error);
+        }
+    }
+    
+
 
     return (
         <View style={styles.container}>
@@ -122,9 +209,13 @@ export default function ProfileScreen({route, navigation}) {
                 <View style={styles.header}>
                     <TouchableOpacity onPress={pickImage}>
                         <Image
-                            style={styles.profileImage}
-                            source={{ uri: profile.profileImage }}
-                        />
+                                style={styles.profileImage}
+                                source={
+                                    profileImage.profileImage
+                                        ? { uri: profileImage.profileImage }
+                                        : require('../../../../assets/perfil.png')
+                                }
+                            />
                     </TouchableOpacity>
                     <Text style={styles.username}>{myUsername}</Text>
                 </View>
@@ -171,7 +262,7 @@ export default function ProfileScreen({route, navigation}) {
                 onPress={() => setSupportModalVisible(true)}
             >
                 <View style={styles.supportButtonContent}>
-                <ion-icon name="headset-sharp" size={40} color={colors.text}/>
+                    <MaterialIcons name="headset-mic" size={30} color="white" style={styles.icon} />
                     <Text style={styles.supportButtonText}>Suporte</Text>
                 </View>
             </TouchableOpacity>
@@ -184,15 +275,17 @@ export default function ProfileScreen({route, navigation}) {
             >
                 <View style={styles.modalContainer}>
                     <View style={styles.modalContent}>
-                    <ion-icon name="headset-sharp" size={40} color={colors.primary}/>
+                        <MaterialIcons name="headset-mic" size={40} color={colors.primary} />
                         <Text style={styles.modalTitle}>SUPORTE</Text>
 
                         <View style={styles.supportInfo}>
+                            <MaterialIcons name="email" size={18} color={colors.primary} />
                             <Text style={styles.modalText}>suporte@redetec.com</Text>
                         </View>
 
                         <View style={styles.supportInfo}>
-                            <Text style={styles.link} onPress={() => Linking.openURL('https://www.reclameaqui.com.br')}>Reclame Aqui</Text>
+                            <MaterialIcons name="feedback" size={18} color={colors.primary} />
+                            <Text style={styles.link} onPress={() => Linking.openURL('https://mail.google.com/mail/u/0/?pli=1#inbox?compose=GTvVlcRzDDGQVVPSgkWbxMPwnQXvLBHjhgxgWMmhxbpfcMWCNZRBtDxZvbVnxwpQhWmmRBlQjTxfr')}>Reclame Aqui</Text>
                         </View>
 
                         <Button title="Fechar" onPress={() => setSupportModalVisible(false)} />
@@ -325,6 +418,44 @@ const styles = StyleSheet.create({
         marginTop: 30,
         flexDirection: 'row',
         justifyContent: 'center',
+    },
+    supportButtonContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    icon: {
+        marginRight: 10,
+    },
+    supportButtonText: {
+        color: colors.text,
+        fontSize: 16,
+        fontWeight: '600',
+    },
+    supportInfo: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 10,
+    },
+    link: {
+        color: colors.primary,
+        fontSize: 16,
+        textDecorationLine: 'underline',
+        marginLeft: 10,
+    },
+    supportButton: {
+        position: 'absolute',
+        bottom: 20,
+        right: 20,
+        backgroundColor: colors.primary,
+        padding: 15,
+        borderRadius: 50,
+        alignItems: 'center',
+        justifyContent: 'center',
+        elevation: 5, // Sombra no Android
+        shadowColor: '#000', // Sombra no iOS
+        shadowOpacity: 0.3,
+        shadowRadius: 5,
+        shadowOffset: { width: 0, height: 2 },
     },
     supportButtonContent: {
         flexDirection: 'row',
