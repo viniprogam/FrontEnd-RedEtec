@@ -37,11 +37,11 @@ export default function PostScreen() {
         input.onchange = (event) => {
             const selectedFile = event.target.files[0];
             setFile({
-            uri: URL.createObjectURL(selectedFile),
-            name: selectedFile.name,
-            type: selectedFile.type,
-            file: selectedFile, // Adicionando o arquivo ao estado
-        });
+                uri: URL.createObjectURL(selectedFile),
+                name: selectedFile.name,
+                type: selectedFile.type,
+                file: selectedFile, // Adicionando o arquivo ao estado
+            });
         // Alert.alert('Arquivo Selecionado', selectedFile.name);
         };
         input.click(); // Simula o clique no input

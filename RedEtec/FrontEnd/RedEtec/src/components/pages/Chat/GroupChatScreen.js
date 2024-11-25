@@ -227,10 +227,24 @@ export default function GroupChatScreen({navigation, route}) {
         setModalFileVisible(true);
     };
 
+
+    /* função para select foto */
+    // const selectPhoto = () => {
+    //     ImagePicker.requestMediaLibraryPermissionsAsync({
+    //         width: 400,
+    //         height: 400,
+    //         cropping: true,
+    //         includeBase64: true,
+    //         freeStyleCropEnabled: true
+    //     }).then(image => {
+    //         console.log(image)
+    //     })
+    // }
+
     const pickImage = async () => {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== 'granted') {
-            alert('Desculpe, precisamos de permissão para acessar a galeria!');
+            Alert.alert('Desculpe, precisamos de permissão para acessar a galeria!');
             return;
         }
 
@@ -239,11 +253,13 @@ export default function GroupChatScreen({navigation, route}) {
             allowsEditing: true,
             aspect: [4, 3],
             quality: 1,
+            base64: true, // use `base64` instead of `includeBase64`
         });
 
-        if (!result.canceled) {
+        if (!result.cancelled) {
+            console.log(result.assets[0]);
             setFile(result.assets[0]);
-            setModalFileVisible(false)
+            setModalFileVisible(false);
         }
     };
 
@@ -318,6 +334,16 @@ export default function GroupChatScreen({navigation, route}) {
 				</View>
 			);
 	};
+
+    const selectPhoto = () => {
+        ImagePicker.openPicker({
+            width: 400,
+            height: 400,
+            cropping: true,
+            includeBase64: true,
+            freeStyle
+        })
+    }
 
 
     return (

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { View, Text, StyleSheet, Image, ScrollView, ActivityIndicator, Alert, TouchableOpacity, Modal, Pressable } from "react-native";
+import { View, Text, StyleSheet, Image, ScrollView, ActivityIndicator, Alert, TouchableOpacity, Modal } from "react-native";
 import axios from 'axios';
 import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
@@ -15,12 +15,14 @@ const colors = {
 
 export default function HomeScreen() {
     const [posts, setPosts] = useState([]);
+    const [userProfiles, setUserProfiles] = useState({}); // Para armazenar os perfis dos usuários
     const [loading, setLoading] = useState(true);
     const [nivelDeAcesso, setNivelDeAcesso] = useState(null);
     const [userId, setUserId] = useState(null);
-
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedPostId, setSelectedPostId] = useState(null);
+
+    console.log(userProfiles)
 
     /*FUNÇÃO PARA CARREGAR OS POST */
     const fetchPosts = async () => {
@@ -29,14 +31,32 @@ export default function HomeScreen() {
             const response = await axios.get('https://localhost:7140/api/Postagem/postagens');
             if (response.data && Array.isArray(response.data)) {
                 setPosts(response.data);
+                // Para cada postagem, vamos buscar o perfil do usuário
+                response.data.forEach(async (post) => {
+                    await fetchUserProfile(post.Id_Usuario); // Chama a função para cada post
+                });
             } else {
                 console.error("Data is not an array:", response.data);
             }
-            console.log(response.data);
         } catch (error) {
             console.error("Erro ao buscar postagens:", error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    // Função para buscar o perfil do usuário baseado no Id_Usuario
+    const fetchUserProfile = async (userId) => {
+        try {
+            const response = await axios.get(`https://localhost:7140/api/Perfil/getperfil/${userId}`);
+            if (response.data) {
+                setUserProfiles((prevState) => ({
+                    ...prevState,
+                    [userId]: response.data, // Armazena os dados do perfil
+                }));
+            }
+        } catch (error) {
+            console.error("Erro ao buscar perfil do usuário:", error);
         }
     };
 
@@ -124,35 +144,38 @@ export default function HomeScreen() {
             </View>
 
             <ScrollView contentContainerStyle={styles.postContainer}>
-                {posts.map((post, index) => (
-                    <View key={index} style={styles.post}>
-                        <View style={styles.postHeader}>
-                            <Image
-                                style={styles.userAvatar}
-                                source={require('../../../../assets/perfil.png')} // Exibe a imagem ou um placeholder
-                            />
-                            <Text style={styles.userName}>{post.Nome_Usuario}</Text>
+                {posts.map((post, index) => {
+                    const userProfile = userProfiles[post.Id_Usuario]; // Recupera o perfil do usuário da postagem
+                    return (
+                        <View key={index} style={styles.post}>
+                            <View style={styles.postHeader}>
+                                <Image
+                                    style={styles.userAvatar}
+                                    source={{ uri: `https://localhost:7140/api/Postagem/imagem/${userProfile?.Foto_Perfil}` }} // Exibe a imagem ou um placeholder
+                                />
+                                <Text style={styles.userName}>{post.Nome_Usuario}</Text>
 
-                            <View style={{ flex: 1 }} />
+                                <View style={{ flex: 1 }} />
 
-                            {(nivelDeAcesso === 1 || post.Id_Usuario === userId) && (
-                                <TouchableOpacity onPress={() => openDeleteConfirmation(post.Id_Postagem)} style={styles.deleteButton}>
-                                    <Ionicons name="trash" size={24} color={colors.text} />
-                                </TouchableOpacity>
+                                {(nivelDeAcesso === 1 || post.Id_Usuario === userId) && (
+                                    <TouchableOpacity onPress={() => openDeleteConfirmation(post.Id_Postagem)} style={styles.deleteButton}>
+                                        <Ionicons name="trash" size={24} color={colors.text} />
+                                    </TouchableOpacity>
+                                )}
+
+                            </View>
+                            {post.imageUrl && (
+                                <Image
+                                    style={styles.imgPost}
+                                    source={{ uri: `https://localhost:7140/api/Postagem/imagem/${post.imageUrl}`}}
+                                />
                             )}
-
+                            <View style={styles.postFooter}>
+                                <Text style={styles.postDescription}>{post.Legenda_Postagem}</Text>
+                            </View>
                         </View>
-                        {post.imageUrl && (
-                            <Image
-                                style={styles.imgPost}
-                                source={{ uri: `https://localhost:7140/api/Postagem/imagem/${post.imageUrl}`}}
-                            />
-                        )}
-                        <View style={styles.postFooter}>
-                            <Text style={styles.postDescription}>{post.Legenda_Postagem}</Text>
-                        </View>
-                    </View>
-                ))}
+                    )
+                })}
             </ScrollView>
 
                 {/* Modal de confirmação de deleção */}

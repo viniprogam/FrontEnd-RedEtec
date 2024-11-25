@@ -25,7 +25,7 @@ export default function ProfileScreen({route, navigation}) {
     const [perfil, setPerfil] = useState(null);
     const [myUsername, setMyUsername] = useState(null);
     const [supportModalVisible, setSupportModalVisible] = useState(false);
-    const [profileImage, setProfileImage] = useState({ profileImage: null });
+    const [profileImage, setProfileImage] = useState(null);
     const [file, setFile] = useState(null);
 
     /*FUNÇÃO PARA ATUALIZAR O NOME */
@@ -92,6 +92,7 @@ export default function ProfileScreen({route, navigation}) {
 
     useEffect(() => {
         userLog();
+        fetchImageProfile();
     }, []);
 
     // Solicitar permissões para acessar a galeria de imagens no dispositivo
@@ -108,65 +109,34 @@ export default function ProfileScreen({route, navigation}) {
 
     // Função para selecionar uma imagem
     const pickImage = async () => {
-        if (Platform.OS === 'web') {
-            // Lógica específica para a versão web, criando um input file
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.onchange = (event) => {
-                const selectedFile = event.target.files[0];
-                if (selectedFile) {
-                    const fileObj = {
-                        uri: URL.createObjectURL(selectedFile),
-                        name: selectedFile.name,
-                        type: selectedFile.type,
-                        file: selectedFile, // Adicionando o arquivo ao estado
-                    };
-                    setFile(fileObj); // Atualiza o estado com o arquivo selecionado
-                    setProfileImage({ profileImage: fileObj.uri }); // Atualiza o estado da imagem com o URI
-                    console.log('Arquivo selecionado:', fileObj);
-                    handlerProfileImage(fileObj);
-                }
-            };
-            input.click();
-        } else {
-            // Para dispositivos móveis, usa o ImagePicker
-            const result = await ImagePicker.launchImageLibraryAsync({
-                mediaTypes: ImagePicker.MediaTypeOptions.Images,
-                allowsEditing: true,
-                aspect: [1, 1],
-                quality: 1,
-            });
-
-            if (!result.cancelled) {
-                // Atualiza o estado com o URI da imagem selecionada
-                const fileObj = {
-                    uri: result.uri,
-                    name: result.uri.split('/').pop(), // Extrai o nome do arquivo do URI
-                    type: result.type === 'image' ? 'image/jpeg' : '', // Assumindo que a imagem será do tipo JPEG
-                    file: result, // Adicionando o objeto `result` ao estado
+        // Lógica específica para a versão web, criando um input file
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.onchange = (event) => {
+            const selectedFile = event.target.files[0];
+            
+            if (selectedFile) {
+                const newFile = {
+                    uri: URL.createObjectURL(selectedFile),
+                    name: selectedFile.name,
+                    type: selectedFile.type,
+                    file: selectedFile,
                 };
-                setFile(fileObj); // Atualiza o estado com o arquivo
-                setProfileImage({ profileImage: result.uri }); // Atualiza o estado da imagem com o URI
-                console.log('Imagem selecionada:', fileObj);
-                handlerProfileImage(fileObj);
-            } else {
-                Alert.alert('Imagem não selecionada', 'Você não escolheu nenhuma imagem.');
+                setFile(newFile); // Atualiza o estado com o novo arquivo
+    
+    
+                console.log('Arquivo selecionado:', newFile);
+                handlerProfileImage(newFile); // Envia o arquivo para o servidor
             }
-        }
-    };
-
-    const handlerProfileImage = async (fileObj) => {
-        const formData = new FormData();
-    
-        // Converta o objeto Blob para um formato que o FormData aceite
-        const file = {
-            uri: fileObj.uri,
-            name: fileObj.name,
-            type: fileObj.type || 'image/png'
         };
+        input.click();
+    };
     
+
+    const handlerProfileImage = async (file) => {
+        const formData = new FormData();
         // Adiciona o arquivo ao FormData
-        formData.append('file', file);
+        formData.append('file', file.file);
     
         try {
             const token = await AsyncStorage.getItem("token");
@@ -184,11 +154,28 @@ export default function ProfileScreen({route, navigation}) {
     
             // Sucesso, faça algo com a resposta
             console.log('Imagem salva com sucesso:', response);
+            fetchImageProfile();
         } catch (error) {
             console.error('Erro ao enviar imagem:', error);
         }
     }
+
+    const fetchImageProfile = async () => {
+        const token = await AsyncStorage.getItem("token");
+
+        const response = await axios.get('https://localhost:7140/api/Perfil', {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+                'Authorization': `Bearer ${token}`,
+            }
+        });
+        
+
+        setProfileImage(response.data.Foto_Perfil);  // Armazene a URL da imagem no estado
+        console.log(response.data)
+    }
     
+    console.log(profileImage)
 
 
     return (
@@ -208,14 +195,11 @@ export default function ProfileScreen({route, navigation}) {
             <View style={styles.profileContainer}>
                 <View style={styles.header}>
                     <TouchableOpacity onPress={pickImage}>
-                        <Image
-                                style={styles.profileImage}
-                                source={
-                                    profileImage.profileImage
-                                        ? { uri: profileImage.profileImage }
-                                        : require('../../../../assets/perfil.png')
-                                }
-                            />
+                    <Image
+                        style={styles.profileImage}
+                        source={ {uri: `https://localhost:7140/api/Postagem/imagem/${profileImage}`} }
+                    />
+
                     </TouchableOpacity>
                     <Text style={styles.username}>{myUsername}</Text>
                 </View>
