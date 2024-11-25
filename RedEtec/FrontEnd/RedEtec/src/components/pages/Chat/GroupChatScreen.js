@@ -46,7 +46,7 @@ export default function GroupChatScreen({navigation, route}) {
     const [modalFileVisible, setModalFileVisible] = useState(false);
 
     const [file, setFile] = useState(null);
-    const [selectedImage, setSelectedImage] = useState(null);
+
 
     const [nivelDeAcesso, setNivelDeAcesso] = useState(null);
     const [myId, setMyId] = useState(null);
@@ -55,6 +55,9 @@ export default function GroupChatScreen({navigation, route}) {
 
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedMessageId, setSelectedMessageId] = useState(null);
+
+
+
 
     // Função para buscar o nome do usuário pelo ID
     const fetchSenderName = async (userId) => {
@@ -228,39 +231,30 @@ export default function GroupChatScreen({navigation, route}) {
     };
 
 
-    /* função para select foto */
-    // const selectPhoto = () => {
-    //     ImagePicker.requestMediaLibraryPermissionsAsync({
-    //         width: 400,
-    //         height: 400,
-    //         cropping: true,
-    //         includeBase64: true,
-    //         freeStyleCropEnabled: true
-    //     }).then(image => {
-    //         console.log(image)
-    //     })
-    // }
-
-    const pickImage = async () => {
-        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-        if (status !== 'granted') {
-            Alert.alert('Desculpe, precisamos de permissão para acessar a galeria!');
-            return;
-        }
-
-        const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            aspect: [4, 3],
-            quality: 1,
-            base64: true, // use `base64` instead of `includeBase64`
-        });
-
-        if (!result.cancelled) {
-            console.log(result.assets[0]);
-            setFile(result.assets[0]);
-            setModalFileVisible(false);
-        }
+    // FUNÇÃO PARA PEGAR FOTO 
+    const pickFileWeb = async () => {
+        // Lógica específica para a versão web, criando um input file
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.onchange = (event) => {
+            const selectedFile = event.target.files[0];
+            
+            if (selectedFile) {
+                const newFile = {
+                    uri: URL.createObjectURL(selectedFile),
+                    name: selectedFile.name,
+                    type: selectedFile.type,
+                    file: selectedFile,
+                };
+                setFile(newFile); // Atualiza o estado com o novo arquivo
+    
+    
+                console.log('Arquivo selecionado:', newFile);
+                handlerImg(newFile); // Envia o arquivo para o servidor
+                setModalFileVisible(false);
+            }
+        };
+        input.click();
     };
 
     const pickDocument = async () => {
@@ -306,6 +300,27 @@ export default function GroupChatScreen({navigation, route}) {
 		}
 	};	
 
+    const handlerImg = async (file) => {
+        const formData = new FormData();
+        formData.append('file', file.file);
+        try {
+            const token = await AsyncStorage.getItem("token");;
+            if (!token) {
+                Alert.alert('Erro', 'Token de autenticação não encontrado.');
+                return;
+            }
+
+            const response = await axios.post('https://localhost:7140/api/ChatGrupo', formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+        } catch (error) {
+            Alert.alert('Erro', error.message || 'Não foi possível enviar a imagem.');
+        }
+    }
+
     const renderItem = ({ item }) => {
 		return (
 				<View style={[styles.messageContainer, item.Id_Usuario_Emissor === myId ? styles.userMessage : styles.otherMessage]}>
@@ -334,17 +349,6 @@ export default function GroupChatScreen({navigation, route}) {
 				</View>
 			);
 	};
-
-    const selectPhoto = () => {
-        ImagePicker.openPicker({
-            width: 400,
-            height: 400,
-            cropping: true,
-            includeBase64: true,
-            freeStyle
-        })
-    }
-
 
     return (
         <KeyboardAvoidingView 
@@ -422,7 +426,7 @@ export default function GroupChatScreen({navigation, route}) {
 			>
 				<View style={styles.modalFileOverlay}>
 					<View style={styles.modalFileContainer}>
-						<TouchableOpacity onPress={pickImage}>
+						<TouchableOpacity onPress={pickFileWeb}>
 						<Ionicons name="image" size={24} color={colors.primary} />
 						</TouchableOpacity>
 						<TouchableOpacity onPress={pickDocument}>

@@ -16,7 +16,6 @@ const colors = {
 export default function PostScreen() {
 
     const [postText, setPostText] = useState('');
-    const [selectedImage, setSelectedImage] = useState(null);
     const navigation = useNavigation();
     const [file, setFile] = useState(null);
 
@@ -78,7 +77,6 @@ export default function PostScreen() {
             if (response.status === 201) {
                 Alert.alert('Sucesso', 'Postagem criada com sucesso!');
                 setPostText('');
-                setSelectedImage(null);
                 setFile(null);
                 navigation.navigate('Home'); // Navegar para a HomeScreen
             } else {
