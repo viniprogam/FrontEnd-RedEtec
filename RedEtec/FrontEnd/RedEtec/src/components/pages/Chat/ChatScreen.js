@@ -30,6 +30,7 @@ export default function ChatScreen() {
     const [error, setError] = useState('');
     const [refreshing, setRefreshing] = useState(false);
     const [searchText, setSearchText] = useState('');
+    const [userProfiles, setUserProfiles] = useState({});
 
     useEffect(() => {
         fetchConversations();
@@ -37,6 +38,7 @@ export default function ChatScreen() {
         console.log('Groups fetched:', groups);
     }, []);
     
+    console.log(conversations)
 
     const fetchConversations = async () => {
         setLoading(true);
@@ -49,12 +51,32 @@ export default function ChatScreen() {
                 }
             });
             setConversations(response.data); 
+
+            // Para cada postagem, vamos buscar o perfil do usuário
+            response.data.forEach(async (conversation) => {
+                await fetchUserProfile(conversation.Id_Usuario)
+            });
         } catch (err) {
             console.error('Erro ao buscar conversas:', err);
             setError(err.message || 'Erro ao buscar conversas. Tente novamente mais tarde.');
         } finally {
             setLoading(false);
             setRefreshing(false);
+        }
+    };
+
+    // Função para buscar o perfil do usuário baseado no Id_Usuario
+    const fetchUserProfile = async (userId) => {
+        try {
+            const response = await axios.get(`https://localhost:7140/api/Perfil/getperfil/${userId}`);
+            if (response.data) {
+                setUserProfiles((prevState) => ({
+                    ...prevState,
+                    [userId]: response.data, // Armazena os dados do perfil
+                }));
+            }
+        } catch (error) {
+            console.error("Erro ao buscar perfil do usuário:", error);
         }
     };
 
@@ -105,6 +127,7 @@ export default function ChatScreen() {
     );
 
     const renderConversationItem = ({ item }) => {
+        const userProfile = userProfiles[item.Id_Usuario]
         return (
             <TouchableOpacity
                 style={styles.item}
@@ -112,7 +135,7 @@ export default function ChatScreen() {
                 activeOpacity={0.7}
             >
                 <Image 
-                    source={require('../../../../assets/perfil.png')} 
+                    source={{ uri: `https://localhost:7140/api/Postagem/imagem/${userProfile?.Foto_Perfil}` }} 
                     style={styles.avatar} 
                 />
                 <View style={styles.itemDetails}>

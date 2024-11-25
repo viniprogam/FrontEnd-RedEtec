@@ -39,6 +39,7 @@ export default function PrivateChatScreen({ route, navigation }) {
 
 	const [modalVisible, setModalVisible] = useState(false);
 	const [selectedMessageId, setSelectedMessageId] = useState(null);
+	const [userProfile, setUserProfile] = useState();
 
 
 
@@ -89,6 +90,17 @@ export default function PrivateChatScreen({ route, navigation }) {
 			setLoading(false);
 		}
 	};
+
+	const fetchUserProfile = async () => {
+        try {
+            const response = await axios.get(`https://localhost:7140/api/Perfil/getperfil/${userId}`);
+            if (response.data) {
+                setUserProfile(response.data);
+            }
+        } catch (error) {
+            console.error("Erro ao buscar perfil do usuário:", error);
+        }
+    };
 	
 
 	const handleError = (error) => {
@@ -109,6 +121,10 @@ export default function PrivateChatScreen({ route, navigation }) {
 			clearInterval(fetchIntervalRef.current);
 		};
 	}, [userId]);
+
+	useEffect (() => {
+		fetchUserProfile();
+	})
 
 	/*FUNÇÃO PARA ENVIAS AS MENSAGENS */
 	const handleSendMessage = async () => {
@@ -261,7 +277,7 @@ export default function PrivateChatScreen({ route, navigation }) {
 				<TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
 					<Ionicons name="arrow-back" size={24} color={colors.text} />
 				</TouchableOpacity>
-				<Image source={require('../../../../assets/perfil.png')} style={styles.profileImage} />
+				<Image source={{ uri: `https://localhost:7140/api/Postagem/imagem/${userProfile?.Foto_Perfil}` }} style={styles.profileImage} />
 				<Text style={styles.headerText}>{userName}</Text>
 			</View>
 			
