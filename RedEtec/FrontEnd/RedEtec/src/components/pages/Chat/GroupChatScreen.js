@@ -109,7 +109,6 @@ export default function GroupChatScreen({navigation, route}) {
                     }));
 
                     setMessages(fetchedMessages.sort((a, b) => a.Timestamp - b.Timestamp));
-                    console.log(response)
                 } else {
                     Alert.alert('Erro', 'Formato inesperado de dados retornado da API.');
                 }
@@ -122,7 +121,6 @@ export default function GroupChatScreen({navigation, route}) {
             setLoading(false);
         }
     };
-
 
     const handleError = (error) => {
         if (error.response) {
@@ -297,10 +295,10 @@ const pickDocument = async () => {
 
     /*FUNÇÃO PARA DELETAR MENSAGENS */
 	const confirmDeleteMessage = (messageId) => {
-		setSelectedMessageId(messageId);
-        console.log(selectedMessageId)
-		setModalVisible(true);
-	};
+        setSelectedMessageId(messageId);
+        setModalVisible(true);
+    };
+    
 
 	const handlerDeleteMessage = async (messageId) => {
 		try {
@@ -317,7 +315,7 @@ const pickDocument = async () => {
 
 			// Remove a mensagem excluída do estado de mensagens
 			setMessages((prevMessages) => prevMessages.filter((msg) => msg.Id_Mensagem_Grupo !== messageId));
-            fetchMessages();
+            // fetchMessages();
 		} catch (error) {
 			Alert.alert('Erro', error.message || 'Não foi possível excluir a mensagem.');
 		}
@@ -331,9 +329,9 @@ const pickDocument = async () => {
                         {!item.myId && (
                                 <Text style={styles.senderName}>{item.senderName}</Text>
                             )}
-                        {item.LocalizacaoMidia ? (
+                        {item.Localizacao_Arquivo ? (
                         <Image 
-                            source={{ uri: item.LocalizacaoMidia }}
+                            source={{ uri: `https://localhost:7140/api/Postagem/imagem/${item.Localizacao_Arquivo}` }}
                             style={styles.messageImage}
                         />
                         ) : null}
