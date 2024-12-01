@@ -56,6 +56,9 @@ export default function GroupChatScreen({navigation, route}) {
     const [modalVisible, setModalVisible] = useState(false);
     const [selectedMessageId, setSelectedMessageId] = useState(null);
 
+    const [modalImgVisible, setModalImgVisible] = useState(false);
+    const [selectedImageUri, setSelectedImageUri] = useState(null);
+
 
 
 
@@ -321,6 +324,18 @@ const pickDocument = async () => {
 		}
 	};	
 
+    
+
+    const openImageModal = (uri) => {
+        setSelectedImageUri(uri);
+        setModalImgVisible(true);
+    };
+
+    const closeImageModal = () => {
+        setModalImgVisible(false);
+        setSelectedImageUri(null);
+    };
+
 
     const renderItem = ({ item }) => {
 		return (
@@ -330,11 +345,13 @@ const pickDocument = async () => {
                                 <Text style={styles.senderName}>{item.senderName}</Text>
                             )}
                         {item.Localizacao_Arquivo ? (
-                        <Image 
-                            source={{ uri: `https://localhost:7140/api/Postagem/imagem/${item.Localizacao_Arquivo}` }}
-                            style={styles.messageImage}
-                        />
-                        ) : null}
+                        <TouchableOpacity onPress={() => openImageModal(`https://localhost:7140/api/Postagem/imagem/${item.Localizacao_Arquivo}`)}>
+                            <Image 
+                                source={{ uri: `https://localhost:7140/api/Postagem/imagem/${item.Localizacao_Arquivo}` }}
+                                style={styles.messageImage}
+                            />
+                        </TouchableOpacity>
+                    ) : null}
                         <Text style={item.isSent ? styles.userText : styles.otherText}>
                         {item.Mensagem}
                         </Text>
@@ -464,6 +481,20 @@ const pickDocument = async () => {
 					</View>
 				</View>
 			</Modal>
+
+
+            <Modal
+                visible={modalImgVisible}
+                transparent={true}
+                onRequestClose={closeImageModal}
+            >
+                <View style={styles.modalImgContainer}>
+                    <TouchableOpacity style={styles.modalCloseButton} onPress={closeImageModal}>
+                        <Text style={styles.modalCloseButtonText}>X</Text>
+                    </TouchableOpacity>
+                    <Image source={{ uri: selectedImageUri }} style={styles.fullScreenImage} />
+                </View>
+            </Modal>
 
             
 
@@ -695,5 +726,26 @@ const styles = StyleSheet.create({
         color: colors.text,
         marginTop: 5,
         textAlign: 'right',
+    },
+    modalImgContainer: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    fullScreenImage: {
+        width: '90%',
+        height: '70%',
+        resizeMode: 'contain',
+    },
+    modalCloseButton: {
+        position: 'absolute',
+        top: 40,
+        right: 20,
+        zIndex: 1,
+    },
+    modalCloseButtonText: {
+        fontSize: 24,
+        color: '#fff',
     },
 });
