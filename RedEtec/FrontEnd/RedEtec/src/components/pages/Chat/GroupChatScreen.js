@@ -101,7 +101,7 @@ export default function GroupChatScreen({navigation, route}) {
                             Id_Mensagem_Grupo: msg.Id_Mensagem_Grupo,
                             Id_Usuario_Emissor: msg.Id_Usuario_Emissor,
                             Mensagem: msg.Mensagem,
-                            LocalizacaoMidia: msg.LocalizacaoMidia,
+                            Localizacao_Arquivo: msg.Localizacao_Arquivo,
                             Timestamp: new Date(msg.Data_Enviada),
                             senderName,
                             isSent: msg.Id_Usuario_Emissor === myId
@@ -109,6 +109,7 @@ export default function GroupChatScreen({navigation, route}) {
                     }));
 
                     setMessages(fetchedMessages.sort((a, b) => a.Timestamp - b.Timestamp));
+                    console.log(response)
                 } else {
                     Alert.alert('Erro', 'Formato inesperado de dados retornado da API.');
                 }
@@ -121,6 +122,7 @@ export default function GroupChatScreen({navigation, route}) {
             setLoading(false);
         }
     };
+
 
     const handleError = (error) => {
         if (error.response) {
@@ -162,7 +164,7 @@ export default function GroupChatScreen({navigation, route}) {
 
     useEffect(() => {
         fetchMessages();
-        fetchIntervalRef.current = setInterval(fetchMessages, 300);
+        fetchIntervalRef.current = setInterval(fetchMessages, 400);
         userLog();
 
         return () => {
@@ -171,107 +173,127 @@ export default function GroupChatScreen({navigation, route}) {
     }, [groupId]);
 
     // Função para enviar mensagens
-    const handleSendMessage = async () => {
-        if(message.trim()) {
-            try {
-                setLoading(true);
-                const token = await AsyncStorage.getItem('token');
-                if(!token) {
-                    throw new Error('Token não encontrado. Por favor, faça login novamente.');
+const handleSendMessage = async (file) => {
+    if (message.trim() || file) { // Verifica se há mensagem ou arquivo
+        try {
+            setLoading(true);
+            const token = await AsyncStorage.getItem('token');
+            if (!token) {
+                throw new Error('Token não encontrado. Por favor, faça login novamente.');
+            }
+
+            // Criação do FormData
+            const formData = new FormData();
+            formData.append('Id_Grupo', groupId);
+            if (message.trim()) {
+                formData.append('Mensagem', message.trim());
+            }
+            if (file) {
+                formData.append('file', file.file);
+            }
+
+            formData.forEach((value, key) => {
+                console.log(`${key}: ${value}`);
+                if (key === 'file') {
+                    console.log(`file URI: ${value.uri}`);
                 }
-                const response = await axios.post('https://localhost:7140/api/ChatGrupo',
-                    {
-                        Id_Grupo: groupId,
-                        Mensagem: message.trim(),
-                    },
-                    {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                            'Content-Type': 'application/json',
-                        }
+            });
+
+            const response = await axios.post('https://localhost:7140/api/ChatGrupo',
+                formData,
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                        'Content-Type': 'multipart/form-data',
                     }
-                );
-
-                if (response.status === 200) {
-                    const newMessage = {
-                        Id_Grupo: groupId,
-                        Mensagem: message.trim(),
-                        LocalizacaoMidia: null,
-                        Timestamp: new Date(),
-                        isSent: true
-                    };
-                    setMessages(prevMessages => [...prevMessages, newMessage]);
-                    setMessage('');
-                    flatListRef.current.scrollToEnd({ animated: true });
-                } else {
-                    throw new Error('Não foi possível enviar a mensagem. Tente novamente.');
                 }
-            } catch(err) {
-                Alert.alert('Erro', err.message || 'Não foi possível enviar a mensagem. Tente novamente.');
-            } finally {
-                setLoading(false);
-            }
-        } else {
-            Alert.alert('Mensagem vazia', 'Por favor, digite uma mensagem antes de enviar.');
-        }
-    };
+            );
 
-    const keyExtractor = (item) => {
-        return item.Timestamp instanceof Date && !isNaN(item.Timestamp.getTime()) 
-            ? item.Timestamp.toISOString() 
-            : String(Math.random());
-    };
-
-    if (loading) {
-        return <ActivityIndicator size="large" color={colors.primary} />;
-    }
-
-    const selectFileMessage = () => {
-        setModalFileVisible(true);
-    };
-
-
-    // FUNÇÃO PARA PEGAR FOTO 
-    const pickFileWeb = async () => {
-        // Lógica específica para a versão web, criando um input file
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.onchange = (event) => {
-            const selectedFile = event.target.files[0];
-            
-            if (selectedFile) {
-                const newFile = {
-                    uri: URL.createObjectURL(selectedFile),
-                    name: selectedFile.name,
-                    type: selectedFile.type,
-                    file: selectedFile,
+            if (response.status === 200) {
+                const newMessage = {
+                    Id_Grupo: groupId,
+                    Mensagem: message.trim(),
+                    Localizacao_Arquivo: file ? file.uri : null, // Localização do arquivo se presente
+                    Timestamp: new Date(),
+                    isSent: true
                 };
-                setFile(newFile); // Atualiza o estado com o novo arquivo
-    
-    
-                console.log('Arquivo selecionado:', newFile);
-                handlerImg(newFile); // Envia o arquivo para o servidor
-                setModalFileVisible(false);
+                setMessages(prevMessages => [...prevMessages, newMessage]);
+                setMessage('');
+                setFile(null); // Limpa o arquivo selecionado
+                flatListRef.current.scrollToEnd({ animated: true });
+            } else {
+                throw new Error('Não foi possível enviar a mensagem. Tente novamente.');
             }
-        };
-        input.click();
-    };
+        } catch (err) {
+            Alert.alert('Erro', err.message || 'Não foi possível enviar a mensagem. Tente novamente.');
+        } finally {
+            setLoading(false);
+        }
+    } else {
+        Alert.alert('Mensagem vazia', 'Por favor, digite uma mensagem ou selecione um arquivo antes de enviar.');
+    }
+};
 
-    const pickDocument = async () => {
-        const result = await DocumentPicker.getDocumentAsync({
-            type: '*/*', // Aceita qualquer tipo de arquivo
-            copyToCacheDirectory: true,
-        });
 
-        if (result.type === 'success') {
-            setFile(result);
+
+const keyExtractor = (item) => {
+    return item.Timestamp instanceof Date && !isNaN(item.Timestamp.getTime()) 
+        ? item.Timestamp.toISOString() 
+        : String(Math.random());
+};
+
+if (loading) {
+    return <ActivityIndicator size="large" color={colors.primary} />;
+}
+
+const selectFileMessage = () => {
+    setModalFileVisible(true);
+};
+
+// Função para pegar foto
+const pickFileWeb = async () => {
+    // Lógica específica para a versão web, criando um input file
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.onchange = (event) => {
+        const selectedFile = event.target.files[0];
+        
+        if (selectedFile) {
+            const newFile = {
+                uri: URL.createObjectURL(selectedFile),
+                name: selectedFile.name,
+                type: selectedFile.type,
+                file: selectedFile,
+            };
+            setFile(newFile); // Atualiza o estado com o novo arquivo
+
+            console.log('Arquivo selecionado:', newFile);
+            handleSendMessage(newFile); // Passa o novo arquivo selecionado para a função
             setModalFileVisible(false);
         }
-        if (!result.canceled) {
-            setFile(result.assets[0]);
-            setModalFileVisible(false)
-        }
     };
+    input.click();
+};
+
+const pickDocument = async () => {
+    const result = await DocumentPicker.getDocumentAsync({
+        type: '*/*', // Aceita qualquer tipo de arquivo
+        copyToCacheDirectory: true,
+    });
+
+    if (result.type === 'success') {
+        const newFile = {
+            uri: result.uri,
+            name: result.name,
+            type: result.mimeType,
+        };
+        setFile(newFile);
+        setModalFileVisible(false);
+        handleSendMessage(newFile); // Passa o novo arquivo selecionado para a função
+    }
+};
+
+    
 
     /*FUNÇÃO PARA DELETAR MENSAGENS */
 	const confirmDeleteMessage = (messageId) => {
@@ -295,31 +317,12 @@ export default function GroupChatScreen({navigation, route}) {
 
 			// Remove a mensagem excluída do estado de mensagens
 			setMessages((prevMessages) => prevMessages.filter((msg) => msg.Id_Mensagem_Grupo !== messageId));
+            fetchMessages();
 		} catch (error) {
 			Alert.alert('Erro', error.message || 'Não foi possível excluir a mensagem.');
 		}
 	};	
 
-    const handlerImg = async (file) => {
-        const formData = new FormData();
-        formData.append('file', file.file);
-        try {
-            const token = await AsyncStorage.getItem("token");;
-            if (!token) {
-                Alert.alert('Erro', 'Token de autenticação não encontrado.');
-                return;
-            }
-
-            const response = await axios.post('https://localhost:7140/api/ChatGrupo', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                    'Authorization': `Bearer ${token}`
-                }
-            })
-        } catch (error) {
-            Alert.alert('Erro', error.message || 'Não foi possível enviar a imagem.');
-        }
-    }
 
     const renderItem = ({ item }) => {
 		return (
