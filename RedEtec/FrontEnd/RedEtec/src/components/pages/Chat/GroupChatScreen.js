@@ -16,7 +16,7 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
 import { Ionicons } from '@expo/vector-icons'; // Importando ícones
-import avatar from '../../../../assets/perfil.png'
+import avatar from '../../../../assets/grupo.png'
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 

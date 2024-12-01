@@ -203,42 +203,7 @@ export default function ProfileScreen({route, navigation}) {
                     </TouchableOpacity>
                     <Text style={styles.username}>{myUsername}</Text>
                 </View>
-                <View style={styles.infoContainer}>
-                    <View style={styles.followInfoContainer}>
-                        <View style={styles.followItem}>
-                            <Text style={styles.followLabel}>Seguidores</Text>
-                            <Text style={styles.followCount}>{profile.seguidores}</Text>
-                        </View>
-                        <View style={styles.followItem}>
-                            <Text style={styles.followLabel}>Seguindo</Text>
-                            <Text style={styles.followCount}>{profile.seguindo}</Text>
-                        </View>
-                    </View>
-                </View>
-                <TouchableOpacity style={styles.editButton} onPress={() => setEditModalVisible(true)}>
-                    <Text style={styles.editButtonText}>Editar Perfil</Text>
-                </TouchableOpacity>
 
-                {/* Modal de edição */}
-                <Modal
-                    visible={editModalVisible}
-                    animationType="slide"
-                    transparent={true}
-                    onRequestClose={() => setEditModalVisible(false)}
-                >
-                    <View style={styles.modalContainer}>
-                        <View style={styles.modalContent}>
-                            <Text style={styles.modalTitle}>Editar Nome</Text>
-                            <TextInput
-                                style={styles.modalInput}
-                                value={newUsername}
-                                onChangeText={setNewUsername}
-                            />
-                            <Button title="Salvar" onPress={handleEditProfile} />
-                            <Button title="Cancelar" onPress={() => setEditModalVisible(false)} />
-                        </View>
-                    </View>
-                </Modal>
             </View>
 
             <TouchableOpacity
@@ -322,9 +287,9 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     profileImage: {
-        width: 120,
-        height: 120,
-        borderRadius: 60,
+        width: 300,
+        height: 300,
+        borderRadius: 150,
         borderColor: colors.primary,
         borderWidth: 2,
     },
