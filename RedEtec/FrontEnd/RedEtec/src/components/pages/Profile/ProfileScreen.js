@@ -14,7 +14,7 @@ const colors = {
     border: '#8A8F9E'
 };
 
-export default function ProfileScreen({route, navigation}) {
+export default function ProfileScreen({ route, navigation }) {
     const { profile, setProfile } = useUserProfile();
     const [editModalVisible, setEditModalVisible] = useState(false);
     const [newUsername, setNewUsername] = useState();
@@ -114,7 +114,7 @@ export default function ProfileScreen({route, navigation}) {
         input.type = 'file';
         input.onchange = (event) => {
             const selectedFile = event.target.files[0];
-            
+
             if (selectedFile) {
                 const newFile = {
                     uri: URL.createObjectURL(selectedFile),
@@ -123,35 +123,35 @@ export default function ProfileScreen({route, navigation}) {
                     file: selectedFile,
                 };
                 setFile(newFile); // Atualiza o estado com o novo arquivo
-    
-    
+
+
                 console.log('Arquivo selecionado:', newFile);
                 handlerProfileImage(newFile); // Envia o arquivo para o servidor
             }
         };
         input.click();
     };
-    
+
 
     const handlerProfileImage = async (file) => {
         const formData = new FormData();
         // Adiciona o arquivo ao FormData
         formData.append('file', file.file);
-    
+
         try {
             const token = await AsyncStorage.getItem("token");
             if (!token) {
                 Alert.alert('Erro', 'Token de autenticação não encontrado.');
                 return;
             }
-    
+
             const response = await axios.post('https://localhost:7140/api/Perfil', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                     'Authorization': `Bearer ${token}`,
                 }
             });
-    
+
             // Sucesso, faça algo com a resposta
             console.log('Imagem salva com sucesso:', response);
             fetchImageProfile();
@@ -169,12 +169,12 @@ export default function ProfileScreen({route, navigation}) {
                 'Authorization': `Bearer ${token}`,
             }
         });
-        
+
 
         setProfileImage(response.data.Foto_Perfil);  // Armazene a URL da imagem no estado
         console.log(response.data)
     }
-    
+
     console.log(profileImage)
 
 
@@ -189,16 +189,19 @@ export default function ProfileScreen({route, navigation}) {
                     />
                 </View>
                 <View style={styles.titleContainer}>
-                    <Text style={styles.title}>RedEtec</Text>
+                    <Text style={styles.title}>
+                        REDE
+                        <Text style={styles.titleHighlight}>TEC</Text>
+                    </Text>
                 </View>
             </View>
             <View style={styles.profileContainer}>
                 <View style={styles.header}>
                     <TouchableOpacity onPress={pickImage}>
-                    <Image
-                        style={styles.profileImage}
-                        source={ {uri: `https://localhost:7140/api/Postagem/imagem/${profileImage}`} }
-                    />
+                        <Image
+                            style={styles.profileImage}
+                            source={{ uri: `https://localhost:7140/api/Postagem/imagem/${profileImage}` }}
+                        />
 
                     </TouchableOpacity>
                     <Text style={styles.username}>{myUsername}</Text>
@@ -224,8 +227,11 @@ export default function ProfileScreen({route, navigation}) {
             >
                 <View style={styles.modalContainer}>
                     <View style={styles.modalContent}>
-                        <MaterialIcons name="headset-mic" size={40} color={colors.primary} />
-                        <Text style={styles.modalTitle}>SUPORTE</Text>
+                        <View style={styles.supportContainer}>
+                            <MaterialIcons name="headset-mic" size={40} color={colors.primary} />
+                            <Text style={styles.modalTitle}>SUPORTE</Text>
+                        </View>
+
 
                         <View style={styles.supportInfo}>
                             <MaterialIcons name="email" size={18} color={colors.primary} />
@@ -234,7 +240,7 @@ export default function ProfileScreen({route, navigation}) {
 
                         <View style={styles.supportInfo}>
                             <MaterialIcons name="feedback" size={18} color={colors.primary} />
-                            <Text style={styles.link} onPress={() => Linking.openURL('https://mail.google.com/mail/u/0/?pli=1#inbox?compose=GTvVlcRzDDGQVVPSgkWbxMPwnQXvLBHjhgxgWMmhxbpfcMWCNZRBtDxZvbVnxwpQhWmmRBlQjTxfr')}>Reclame Aqui</Text>
+                            <Text style={styles.link} onPress={() => Linking.openURL('https://wa.me/+5511963484055?')}>Reclame Aqui</Text>
                         </View>
 
                         <Button title="Fechar" onPress={() => setSupportModalVisible(false)} />
@@ -287,8 +293,8 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     profileImage: {
-        width: 300,
-        height: 300,
+        width: 200,
+        height: 200,
         borderRadius: 150,
         borderColor: colors.primary,
         borderWidth: 2,
@@ -346,10 +352,17 @@ const styles = StyleSheet.create({
         width: '80%',
         alignItems: 'center',
     },
+    supportContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginVertical: 10,
+    },
     modalTitle: {
-        fontSize: 20,
-        fontWeight: '600',
-        marginBottom: 20,
+        fontSize: 18,
+        fontWeight: 'bold',
+        color: colors.primary,
+        marginLeft: 8,
     },
     modalInput: {
         width: '100%',
@@ -359,27 +372,11 @@ const styles = StyleSheet.create({
         padding: 5,
         fontSize: 18,
     },
-    supportButton: {
-        backgroundColor: colors.primary,
-        padding: 15,
-        borderRadius: 8,
-        alignItems: 'center',
-        marginTop: 30,
-        flexDirection: 'row',
-        justifyContent: 'center',
-    },
-    supportButtonContent: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
+
     icon: {
         marginRight: 10,
     },
-    supportButtonText: {
-        color: colors.text,
-        fontSize: 16,
-        fontWeight: '600',
-    },
+
     supportInfo: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -428,5 +425,9 @@ const styles = StyleSheet.create({
         fontSize: 16,
         textDecorationLine: 'underline',
         marginLeft: 10,
+    },
+
+    titleHighlight: {
+        color: '#E0E0E0'
     }
 });

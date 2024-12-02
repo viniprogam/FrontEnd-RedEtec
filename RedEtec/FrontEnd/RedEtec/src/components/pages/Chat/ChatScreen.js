@@ -18,7 +18,7 @@ const colors = {
     primary: '#040915',
     secondary: '#1E2A38',
     background: '#F4F4F4',
-    text: '#FFFFFF',
+    text: '#E0E0E0',
     border: '#8A8F9E'
 };
 
@@ -183,8 +183,11 @@ export default function ChatScreen() {
                     />
                 </View>
                 <View style={styles.titleContainer}>
-                    <Text style={styles.title}>RedEtec</Text>
-                </View>
+    <Text style={styles.title}>
+        REDE
+        <Text style={styles.titleHighlight}>TEC</Text>
+    </Text>
+</View>
             </View>
 
             {error ? (
@@ -325,4 +328,14 @@ const styles = StyleSheet.create({
         borderRadius: 5,
         color: colors.text,
     },
+    searchInput: {
+        backgroundColor: '#1A1A1A',
+        padding: 10,
+        margin: 10,
+        borderRadius: 5,
+        color: colors.text,
+    },
+    titleHighlight: {
+        color: '#E0E0E0'
+    }
 });

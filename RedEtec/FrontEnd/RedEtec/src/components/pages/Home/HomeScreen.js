@@ -79,26 +79,26 @@ export default function HomeScreen() {
             if (!token) {
                 throw new Error('Token não encontrado. Por favor, faça login novamente.');
             }
-            
+
             const response = await axios.get('https://localhost:7140/api/Usuario/getusuario', {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     'Content-Type': 'application/json',
                 },
             });
-    
+
             const user = response.data;
 
             console.log(user);
             console.log(token);
-    
+
             if (user && user.Id_Usuario !== undefined && user.Nivel_Acesso !== undefined) {
                 setUserId(user.Id_Usuario);
                 setNivelDeAcesso(user.Nivel_Acesso);
             } else {
                 throw new Error('Dados do usuário não encontrados na resposta.');
             }
-    
+
         } catch (error) {
             console.error("Erro ao buscar usuário logado: ", error.message);
         }
@@ -139,8 +139,12 @@ export default function HomeScreen() {
                     />
                 </View>
                 <View style={styles.titleContainer}>
-                    <Text style={styles.title}>RedEtec</Text>
+                    <Text style={styles.title}>
+                        REDE
+                        <Text style={styles.titleHighlight}>TEC</Text>
+                    </Text>
                 </View>
+
             </View>
 
             <ScrollView contentContainerStyle={styles.postContainer}>
@@ -167,7 +171,7 @@ export default function HomeScreen() {
                             {post.imageUrl && (
                                 <Image
                                     style={styles.imgPost}
-                                    source={{ uri: `https://localhost:7140/api/Postagem/imagem/${post.imageUrl}`}}
+                                    source={{ uri: `https://localhost:7140/api/Postagem/imagem/${post.imageUrl}` }}
                                 />
                             )}
                             <View style={styles.postFooter}>
@@ -178,7 +182,7 @@ export default function HomeScreen() {
                 })}
             </ScrollView>
 
-                {/* Modal de confirmação de deleção */}
+            {/* Modal de confirmação de deleção */}
             <Modal
                 animationType="slide"
                 transparent={true}
@@ -246,19 +250,19 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
     },
     post: {
-        marginBottom: 20,
+        marginBottom: 10,
         backgroundColor: '#fff',
         borderRadius: 10,
         overflow: 'hidden',
         borderColor: colors.border,
         borderWidth: 1,
-        marginVertical: 10,
-        marginHorizontal: 5,
+        marginVertical: 30,
+        marginHorizontal: 18,
     },
     postHeader: {
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 10,
+        padding: 15,
         backgroundColor: colors.primary,
         flex: 1,
     },
@@ -279,14 +283,14 @@ const styles = StyleSheet.create({
     },
     imgPost: {
         width: '100%',
-        height: 400,
+        height: 380,
         backgroundColor: colors.border,
     },
     postFooter: {
         padding: 10,
     },
     postDescription: {
-        fontSize: 14,
+        fontSize: 18,
         color: colors.primary,
     },
     loadingContainer: {
@@ -344,5 +348,8 @@ const styles = StyleSheet.create({
 	buttonText: {
 		color: 'white',
 		textAlign: 'center',
-	},
+	 },
+     titleHighlight: {
+        color: '#E0E0E0', 
+    },
 });

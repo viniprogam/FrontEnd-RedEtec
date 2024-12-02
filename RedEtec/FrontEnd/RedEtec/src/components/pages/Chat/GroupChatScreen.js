@@ -12,6 +12,8 @@ import {
     Platform, 
     Alert,
     Modal
+
+
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
@@ -338,6 +340,15 @@ const pickDocument = async () => {
 
 
     const renderItem = ({ item }) => {
+
+        const openPdf = (url) => {
+            // Usando DocumentViewer para abrir o PDF
+            DocumentViewer.open({
+                url: item.Localizacao_Arquivo,
+                fileType: 'pdf',
+            });
+        };
+
 		return (
 				<View style={[styles.messageContainer, item.Id_Usuario_Emissor === myId ? styles.userMessage : styles.otherMessage]}>
                     <View style={styles.messageinfs}>

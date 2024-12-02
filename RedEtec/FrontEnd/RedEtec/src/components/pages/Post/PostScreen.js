@@ -4,6 +4,8 @@ import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {MaterialIcons} from '@expo/vector-icons'
+import {Feather} from '@expo/vector-icons'
 
 const colors = {
     primary: '#040915',
@@ -41,7 +43,7 @@ export default function PostScreen() {
                 type: selectedFile.type,
                 file: selectedFile, // Adicionando o arquivo ao estado
             });
-        // Alert.alert('Arquivo Selecionado', selectedFile.name);
+            // Alert.alert('Arquivo Selecionado', selectedFile.name);
         };
         input.click(); // Simula o clique no input
     };
@@ -87,7 +89,7 @@ export default function PostScreen() {
             Alert.alert('Erro', 'Houve um problema ao criar a postagem.');
         }
     };
-    
+
 
     return (
         <View style={styles.container}>
@@ -100,16 +102,26 @@ export default function PostScreen() {
                     />
                 </View>
                 <View style={styles.titleContainer}>
-                    <Text style={styles.title}>RedEtec</Text>
+                    <Text style={styles.title}>
+                        REDE
+                        <Text style={styles.titleHighlight}>TEC</Text>
+                    </Text>
                 </View>
+
             </View>
 
             <ScrollView contentContainerStyle={styles.scrollViewContent}>
-                <Text style={styles.subTitle}>Criar Novo Post</Text>
+                <Text style={styles.subTitle}>
+                    <Feather name="edit-3" size={24} color="#000" />
+                    {' '}Criar Publicação
+                </Text>
 
                 <TouchableOpacity style={styles.imagePickerButton} onPress={pickFileWeb}>
-                    <Text style={styles.imagePickerText}>Escolher Imagem</Text>
+                    <Feather name="image" size={25} color="#555" style={styles.icon} />
+                    <Text styl
+                        e={styles.imagePickerText}>Escolher Imagem</Text>
                 </TouchableOpacity>
+
 
                 {file && (
                     <View style={styles.previewContainer}>
@@ -131,6 +143,7 @@ export default function PostScreen() {
         </View>
     );
 }
+
 
 const styles = StyleSheet.create({
     container: {
@@ -164,7 +177,8 @@ const styles = StyleSheet.create({
         fontFamily: 'Noto Serif',
     },
     subTitle: {
-        marginTop: 20,
+        marginTop: 45,
+        paddingBottom: 20,
         textAlign: 'center',
         fontSize: 26,
         fontWeight: 'bold',
@@ -185,17 +199,25 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     imagePickerButton: {
-        backgroundColor: colors.primary,
-        padding: 15,
-        borderRadius: 10,
-        marginBottom: 20,
+        flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'center',
+        padding: 30,
+        borderWidth: 2,
+        borderColor: '#ccc',
+        borderRadius: 8,
+        backgroundColor: '#f9f9f9',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 2,
+        marginBottom: 20,
     },
     imagePickerText: {
-        color: colors.text,
-        textAlign: 'center',
         fontSize: 16,
-        fontWeight: 'bold',
+        color: '#555',
+        marginLeft: 8,
     },
     previewContainer: {
         marginBottom: 20,
@@ -209,7 +231,7 @@ const styles = StyleSheet.create({
     },
     postButton: {
         backgroundColor: colors.primary,
-        padding: 15,
+        padding: 12,
         borderRadius: 10,
         alignItems: 'center',
     },
@@ -217,5 +239,21 @@ const styles = StyleSheet.create({
         color: colors.text,
         fontSize: 16,
         fontWeight: 'bold',
+
     },
+    titleHighlight: {
+        color: '#a9a9a9'
+    },
+    icon: {
+        marginRight: 4,
+    },
+    modalInput: {
+        width: '100%',
+        borderBottomWidth: 1,
+        borderColor: colors.primary,
+        marginBottom: 20,
+        padding: 5,
+        fontSize: 18,
+    },
+
 });
