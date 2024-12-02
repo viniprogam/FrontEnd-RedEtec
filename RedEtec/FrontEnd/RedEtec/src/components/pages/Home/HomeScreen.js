@@ -28,7 +28,17 @@ export default function HomeScreen() {
     const fetchPosts = async () => {
         setLoading(true);
         try {
-            const response = await axios.get('https://localhost:7140/api/Postagem/postagens');
+
+            const token = await AsyncStorage.getItem('token');
+            if (!token) {
+                throw new Error('Token não encontrado. Por favor, faça login novamente.');
+            }
+
+            const response = await axios.get('https://localhost:7140/api/Postagem/postagens', {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
             if (response.data && Array.isArray(response.data)) {
                 setPosts(response.data);
                 // Para cada postagem, vamos buscar o perfil do usuário

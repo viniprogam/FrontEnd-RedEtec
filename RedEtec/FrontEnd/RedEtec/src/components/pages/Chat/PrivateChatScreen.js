@@ -232,6 +232,7 @@ export default function PrivateChatScreen({ route, navigation }) {
 	};
 	/*FUNÇÃO PARA DELETAR MENSAGENS */
 	const confirmDeleteMessage = (messageId) => {
+		console.log(messageId)
 		setSelectedMessageId(messageId);
 		setModalVisible(true);
 	};

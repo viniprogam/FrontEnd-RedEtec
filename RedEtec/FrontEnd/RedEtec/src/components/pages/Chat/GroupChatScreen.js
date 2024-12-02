@@ -21,6 +21,7 @@ import { Ionicons } from '@expo/vector-icons'; // Importando ícones
 import avatar from '../../../../assets/grupo.png'
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Document, Page } from 'react-pdf';
 
 const colors = {
     primary: '#040915',
@@ -60,6 +61,8 @@ export default function GroupChatScreen({navigation, route}) {
 
     const [modalImgVisible, setModalImgVisible] = useState(false);
     const [selectedImageUri, setSelectedImageUri] = useState(null);
+
+
 
 
 
@@ -112,6 +115,9 @@ export default function GroupChatScreen({navigation, route}) {
                             isSent: msg.Id_Usuario_Emissor === myId
                         };
                     }));
+
+                    // Adicionar logs para depuração
+                // console.log("Fetched Messages:", fetchedMessages);
 
                     setMessages(fetchedMessages.sort((a, b) => a.Timestamp - b.Timestamp));
                 } else {
@@ -279,27 +285,34 @@ const pickFileWeb = async () => {
 };
 
 const pickDocument = async () => {
-    const result = await DocumentPicker.getDocumentAsync({
-        type: '*/*', // Aceita qualquer tipo de arquivo
-        copyToCacheDirectory: true,
-    });
+    // Lógica específica para a versão web, criando um input file
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.onchange = (event) => {
+        const selectedFile = event.target.files[0];
+        
+        if (selectedFile) {
+            const newFile = {
+                uri: URL.createObjectURL(selectedFile),
+                name: selectedFile.name,
+                type: selectedFile.type,
+                file: selectedFile,
+            };
+            setFile(newFile); // Atualiza o estado com o novo arquivo
 
-    if (result.type === 'success') {
-        const newFile = {
-            uri: result.uri,
-            name: result.name,
-            type: result.mimeType,
-        };
-        setFile(newFile);
-        setModalFileVisible(false);
-        handleSendMessage(newFile); // Passa o novo arquivo selecionado para a função
-    }
+            console.log('Arquivo selecionado:', newFile);
+            handleSendMessage(newFile); // Passa o novo arquivo selecionado para a função
+            setModalFileVisible(false);
+        }
+    };
+    input.click();
 };
 
     
 
     /*FUNÇÃO PARA DELETAR MENSAGENS */
 	const confirmDeleteMessage = (messageId) => {
+        console.log(messageId)
         setSelectedMessageId(messageId);
         setModalVisible(true);
     };
@@ -320,7 +333,7 @@ const pickDocument = async () => {
 
 			// Remove a mensagem excluída do estado de mensagens
 			setMessages((prevMessages) => prevMessages.filter((msg) => msg.Id_Mensagem_Grupo !== messageId));
-            // fetchMessages();
+            fetchMessages();
 		} catch (error) {
 			Alert.alert('Erro', error.message || 'Não foi possível excluir a mensagem.');
 		}
@@ -341,13 +354,8 @@ const pickDocument = async () => {
 
     const renderItem = ({ item }) => {
 
-        const openPdf = (url) => {
-            // Usando DocumentViewer para abrir o PDF
-            DocumentViewer.open({
-                url: item.Localizacao_Arquivo,
-                fileType: 'pdf',
-            });
-        };
+        // console.log("Item data:", item);
+
 
 		return (
 				<View style={[styles.messageContainer, item.Id_Usuario_Emissor === myId ? styles.userMessage : styles.otherMessage]}>
@@ -758,5 +766,5 @@ const styles = StyleSheet.create({
     modalCloseButtonText: {
         fontSize: 24,
         color: '#fff',
-    },
+    }
 });

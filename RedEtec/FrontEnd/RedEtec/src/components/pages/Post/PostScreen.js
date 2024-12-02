@@ -20,6 +20,40 @@ export default function PostScreen() {
     const [postText, setPostText] = useState('');
     const navigation = useNavigation();
     const [file, setFile] = useState(null);
+    const [nivelDeAcesso, setNivelDeAcesso] = useState(null);
+    const [userId, setUserId] = useState(null);
+
+    /*FUNÇÃO PARA BUSCAR DADOS DO USUÁRIO LOGADO*/
+    const userLog = async () => {
+        try {
+            const token = await AsyncStorage.getItem('token');
+            if (!token) {
+                throw new Error('Token não encontrado. Por favor, faça login novamente.');
+            }
+
+            const response = await axios.get('https://localhost:7140/api/Usuario/getusuario', {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            const user = response.data;
+
+            console.log(user);
+            console.log(token);
+
+            if (user && user.Id_Usuario !== undefined && user.Nivel_Acesso !== undefined) {
+                setUserId(user.Id_Usuario);
+                setNivelDeAcesso(user.Nivel_Acesso);
+            } else {
+                throw new Error('Dados do usuário não encontrados na resposta.');
+            }
+
+        } catch (error) {
+            console.error("Erro ao buscar usuário logado: ", error.message);
+        }
+    };
 
     useEffect(() => {
         (async () => {
@@ -31,6 +65,10 @@ export default function PostScreen() {
             }
         })();
     }, []);
+
+    useEffect(() => {
+        userLog();
+    })
 
     const pickFileWeb = () => {
         const input = document.createElement('input');
@@ -116,11 +154,14 @@ export default function PostScreen() {
                     {' '}Criar Publicação
                 </Text>
 
-                <TouchableOpacity style={styles.imagePickerButton} onPress={pickFileWeb}>
-                    <Feather name="image" size={25} color="#555" style={styles.icon} />
-                    <Text styl
-                        e={styles.imagePickerText}>Escolher Imagem</Text>
-                </TouchableOpacity>
+
+                {(nivelDeAcesso === 1) && (
+                    <TouchableOpacity style={styles.imagePickerButton} onPress={pickFileWeb}>
+                        <Feather name="image" size={25} color="#555" style={styles.icon} />
+                        <Text style={styles.imagePickerText}>Escolher Imagem</Text>
+                    </TouchableOpacity>
+                )}
+                
 
 
                 {file && (
