@@ -37,7 +37,11 @@ export default function RegisterScreen() {
                     />
                 </View>
             </View>
-            <TouchableOpacity style={styles.button} onPress={handleNext}>
+            <TouchableOpacity
+                style={[styles.button, { backgroundColor: Nome_Usuario.trim() ? '#040915' : 'grey' }]} // Muda a cor do botão se o input estiver vazio
+                onPress={handleNext}
+                disabled={!Nome_Usuario.trim()} // Desabilita o botão se o input estiver vazio
+            >
                 <Text style={styles.buttonText}>Avançar</Text>
             </TouchableOpacity>
         </View>

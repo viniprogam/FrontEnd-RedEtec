@@ -190,7 +190,7 @@ export default function GroupChatScreen({ navigation, route }) {
                 if (!token) {
                     throw new Error('Token não encontrado. Por favor, faça login novamente.');
                 }
-
+    
                 // Criação do FormData
                 const formData = new FormData();
                 formData.append('Id_Grupo', groupId);
@@ -199,16 +199,15 @@ export default function GroupChatScreen({ navigation, route }) {
                 }
                 if (file) {
                     formData.append('file', file.file);
-                    setModalErrorVisible(false)
                 }
-
-                formData.forEach((value, key) => {
-                    console.log(`${key}: ${value}`);
-                    if (key === 'file') {
-                        console.log(`file URI: ${value.uri}`);
-                    }
-                });
-
+    
+                // formData.forEach((value, key) => {
+                //     console.log(`${key}: ${value}`);
+                //     if (key === 'file') {
+                //         console.log(`file URI: ${value.uri}`);
+                //     }
+                // });
+    
                 const response = await axios.post('https://localhost:7140/api/ChatGrupo',
                     formData,
                     {
@@ -218,9 +217,8 @@ export default function GroupChatScreen({ navigation, route }) {
                         }
                     }
                 );
-
+    
                 if (response.status === 200) {
-                    setModalErrorVisible(false)
                     const newMessage = {
                         Id_Grupo: groupId,
                         Mensagem: message.trim(),
@@ -233,17 +231,33 @@ export default function GroupChatScreen({ navigation, route }) {
                     setMessage('');
                     setFile(null); // Limpa o arquivo selecionado
                     flatListRef.current.scrollToEnd({ animated: true });
+                    setModalErrorVisible(false); // Esconde o modal em caso de sucesso
+                } else if (response.status === 500) {
+                    setModalErrorVisible(false); // Esconde o modal em caso de erro 500
+                } else if (response.status === 400) {
+                    setModalErrorVisible(true); // Mostra o modal em caso de erro 400
+                } else {
+                    setModalErrorVisible(true); // Mostra o modal para outros erros
                 }
             } catch (err) {
-                setModalErrorVisible(true); // Mostra o modal quando houver um erro
-                // setModalErrorVisible(false)
+                if(err.status === 500) {
+                    setModalErrorVisible(false); // Mostra o modal quando houver um erro na requisição
+                } else {
+                    setModalErrorVisible(true)
+                    setMessage('');
+                    setFile(null);
+                }
+                
             } finally {
                 setLoading(false);
             }
         } else {
+            setModalErrorVisible(false); // Mostra o modal se o token estiver vazio
             Alert.alert('Mensagem vazia', 'Por favor, digite uma mensagem ou selecione um arquivo antes de enviar.');
         }
     };
+    
+    
 
 
 
