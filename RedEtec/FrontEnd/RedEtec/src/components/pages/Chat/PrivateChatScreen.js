@@ -41,6 +41,8 @@ export default function PrivateChatScreen({ route, navigation }) {
 	const [selectedMessageId, setSelectedMessageId] = useState(null);
 	const [userProfile, setUserProfile] = useState();
 
+	const [modalErrorVisible, setModalErrorVisible] = useState(false);
+
 
 
 	/*FUNÇÃO PARA CARREGAR OS MENSAGENS */
@@ -166,7 +168,7 @@ export default function PrivateChatScreen({ route, navigation }) {
 					throw new Error('Não foi possível enviar a mensagem. Tente novamente.');
 				}
 			} catch (err) {
-				Alert.alert('Erro', err.message || 'Não foi possível enviar a mensagem. Tente novamente.');
+				setModalVisible(true); // Mostra o modal quando houver um erro
 			} finally {
 				setLoading(false);
 			}
@@ -330,6 +332,25 @@ export default function PrivateChatScreen({ route, navigation }) {
 					</View>
 				</View>
 			</Modal>
+
+			<Modal
+                transparent={true}
+                animationType="slide"
+                visible={modalErrorVisible}
+                onRequestClose={() => setModalErrorVisible(false)}
+            >
+                <View style={styles.centeredView}>
+                    <View style={styles.modalView}>
+                        <Text style={styles.modalText}>Conteúdo indevido, esta mensagem não pode ser enviada</Text>
+                        <TouchableOpacity
+                            style={styles.button}
+                            onPress={() => setModalVisible(false)}
+                        >
+                            <Text style={styles.buttonText}>Fechar</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
 
 		</KeyboardAvoidingView>
 	);

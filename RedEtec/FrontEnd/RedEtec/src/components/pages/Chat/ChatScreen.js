@@ -67,17 +67,13 @@ export default function ChatScreen() {
 
     // Função para buscar o perfil do usuário baseado no Id_Usuario
     const fetchUserProfile = async (userId) => {
-        try {
-            const response = await axios.get(`https://localhost:7140/api/Perfil/getperfil/${userId}`);
+        const response = await axios.get(`https://localhost:7140/api/Perfil/getperfil/${userId}`);
             if (response.data) {
                 setUserProfiles((prevState) => ({
                     ...prevState,
                     [userId]: response.data, // Armazena os dados do perfil
                 }));
             }
-        } catch (error) {
-            console.error("Erro ao buscar perfil do usuário:", error);
-        }
     };
 
     const fetchGroups = async () => {

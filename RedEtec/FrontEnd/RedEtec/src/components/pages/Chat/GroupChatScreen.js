@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-    View, 
-    Text, 
-    StyleSheet, 
-    TextInput, 
-    TouchableOpacity, 
-    FlatList, 
-    Image, 
-    ActivityIndicator, 
-    KeyboardAvoidingView, 
-    Platform, 
+import {
+    View,
+    Text,
+    StyleSheet,
+    TextInput,
+    TouchableOpacity,
+    FlatList,
+    Image,
+    ActivityIndicator,
+    KeyboardAvoidingView,
+    Platform,
     Alert,
     Modal
 
@@ -35,8 +35,8 @@ const colors = {
     modalContent: '#FFFFFF',
 };
 
-export default function GroupChatScreen({navigation, route}) {
-    const {groupId, groupName} = route.params;
+export default function GroupChatScreen({ navigation, route }) {
+    const { groupId, groupName } = route.params;
 
     const [message, setMessage] = useState('');
     const [messages, setMessages] = useState([]);
@@ -62,8 +62,7 @@ export default function GroupChatScreen({navigation, route}) {
     const [modalImgVisible, setModalImgVisible] = useState(false);
     const [selectedImageUri, setSelectedImageUri] = useState(null);
 
-
-
+    const [modalErrorVisible, setModalErrorVisible] = useState(false);
 
 
 
@@ -117,7 +116,7 @@ export default function GroupChatScreen({navigation, route}) {
                     }));
 
                     // Adicionar logs para depuração
-                // console.log("Fetched Messages:", fetchedMessages);
+                    // console.log("Fetched Messages:", fetchedMessages);
 
                     setMessages(fetchedMessages.sort((a, b) => a.Timestamp - b.Timestamp));
                 } else {
@@ -182,164 +181,164 @@ export default function GroupChatScreen({navigation, route}) {
     }, [groupId]);
 
     // Função para enviar mensagens
-const handleSendMessage = async (file) => {
-    if (message.trim() || file) { // Verifica se há mensagem ou arquivo
+    const handleSendMessage = async (file) => {
+        if (message.trim() || file) { // Verifica se há mensagem ou arquivo
+            try {
+                setLoading(true);
+                const token = await AsyncStorage.getItem('token');
+                if (!token) {
+                    throw new Error('Token não encontrado. Por favor, faça login novamente.');
+                }
+
+                // Criação do FormData
+                const formData = new FormData();
+                formData.append('Id_Grupo', groupId);
+                if (message.trim()) {
+                    formData.append('Mensagem', message.trim());
+                }
+                if (file) {
+                    formData.append('file', file.file);
+                }
+
+                formData.forEach((value, key) => {
+                    console.log(`${key}: ${value}`);
+                    if (key === 'file') {
+                        console.log(`file URI: ${value.uri}`);
+                    }
+                });
+
+                const response = await axios.post('https://localhost:7140/api/ChatGrupo',
+                    formData,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                            'Content-Type': 'multipart/form-data',
+                        }
+                    }
+                );
+
+                if (response.status === 200) {
+                    const newMessage = {
+                        Id_Grupo: groupId,
+                        Mensagem: message.trim(),
+                        Localizacao_Arquivo: file ? file.uri : null, // Localização do arquivo se presente
+                        Timestamp: new Date(),
+                        isSent: true
+                    };
+                    setMessages(prevMessages => [...prevMessages, newMessage]);
+                    setMessage('');
+                    setFile(null); // Limpa o arquivo selecionado
+                    flatListRef.current.scrollToEnd({ animated: true });
+                } else {
+                    setModalVisible(true); // Mostra o modal quando houver um erro
+                }
+            } catch (err) {
+                setModalVisible(true); // Mostra o modal quando houver um erro
+            } finally {
+                setLoading(false);
+            }
+        } else {
+            Alert.alert('Mensagem vazia', 'Por favor, digite uma mensagem ou selecione um arquivo antes de enviar.');
+        }
+    };
+
+
+
+    const keyExtractor = (item) => {
+        return item.Timestamp instanceof Date && !isNaN(item.Timestamp.getTime())
+            ? item.Timestamp.toISOString()
+            : String(Math.random());
+    };
+
+    if (loading) {
+        return <ActivityIndicator size="large" color={colors.primary} />;
+    }
+
+    const selectFileMessage = () => {
+        setModalFileVisible(true);
+    };
+
+    // Função para pegar foto
+    const pickFileWeb = async () => {
+        // Lógica específica para a versão web, criando um input file
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.onchange = (event) => {
+            const selectedFile = event.target.files[0];
+
+            if (selectedFile) {
+                const newFile = {
+                    uri: URL.createObjectURL(selectedFile),
+                    name: selectedFile.name,
+                    type: selectedFile.type,
+                    file: selectedFile,
+                };
+                setFile(newFile); // Atualiza o estado com o novo arquivo
+
+                console.log('Arquivo selecionado:', newFile);
+                handleSendMessage(newFile); // Passa o novo arquivo selecionado para a função
+                setModalFileVisible(false);
+            }
+        };
+        input.click();
+    };
+
+    const pickDocument = async () => {
+        // Lógica específica para a versão web, criando um input file
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.onchange = (event) => {
+            const selectedFile = event.target.files[0];
+
+            if (selectedFile) {
+                const newFile = {
+                    uri: URL.createObjectURL(selectedFile),
+                    name: selectedFile.name,
+                    type: selectedFile.type,
+                    file: selectedFile,
+                };
+                setFile(newFile); // Atualiza o estado com o novo arquivo
+
+                console.log('Arquivo selecionado:', newFile);
+                handleSendMessage(newFile); // Passa o novo arquivo selecionado para a função
+                setModalFileVisible(false);
+            }
+        };
+        input.click();
+    };
+
+
+
+    /*FUNÇÃO PARA DELETAR MENSAGENS */
+    const confirmDeleteMessage = (messageId) => {
+        console.log(messageId)
+        setSelectedMessageId(messageId);
+        setModalVisible(true);
+    };
+
+
+    const handlerDeleteMessage = async (messageId) => {
         try {
-            setLoading(true);
             const token = await AsyncStorage.getItem('token');
             if (!token) {
                 throw new Error('Token não encontrado. Por favor, faça login novamente.');
             }
 
-            // Criação do FormData
-            const formData = new FormData();
-            formData.append('Id_Grupo', groupId);
-            if (message.trim()) {
-                formData.append('Mensagem', message.trim());
-            }
-            if (file) {
-                formData.append('file', file.file);
-            }
-
-            formData.forEach((value, key) => {
-                console.log(`${key}: ${value}`);
-                if (key === 'file') {
-                    console.log(`file URI: ${value.uri}`);
+            await axios.delete(`https://localhost:7140/api/ChatGrupo/${messageId}`, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
                 }
             });
 
-            const response = await axios.post('https://localhost:7140/api/ChatGrupo',
-                formData,
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        'Content-Type': 'multipart/form-data',
-                    }
-                }
-            );
-
-            if (response.status === 200) {
-                const newMessage = {
-                    Id_Grupo: groupId,
-                    Mensagem: message.trim(),
-                    Localizacao_Arquivo: file ? file.uri : null, // Localização do arquivo se presente
-                    Timestamp: new Date(),
-                    isSent: true
-                };
-                setMessages(prevMessages => [...prevMessages, newMessage]);
-                setMessage('');
-                setFile(null); // Limpa o arquivo selecionado
-                flatListRef.current.scrollToEnd({ animated: true });
-            } else {
-                throw new Error('Não foi possível enviar a mensagem. Tente novamente.');
-            }
-        } catch (err) {
-            Alert.alert('Erro', err.message || 'Não foi possível enviar a mensagem. Tente novamente.');
-        } finally {
-            setLoading(false);
-        }
-    } else {
-        Alert.alert('Mensagem vazia', 'Por favor, digite uma mensagem ou selecione um arquivo antes de enviar.');
-    }
-};
-
-
-
-const keyExtractor = (item) => {
-    return item.Timestamp instanceof Date && !isNaN(item.Timestamp.getTime()) 
-        ? item.Timestamp.toISOString() 
-        : String(Math.random());
-};
-
-if (loading) {
-    return <ActivityIndicator size="large" color={colors.primary} />;
-}
-
-const selectFileMessage = () => {
-    setModalFileVisible(true);
-};
-
-// Função para pegar foto
-const pickFileWeb = async () => {
-    // Lógica específica para a versão web, criando um input file
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.onchange = (event) => {
-        const selectedFile = event.target.files[0];
-        
-        if (selectedFile) {
-            const newFile = {
-                uri: URL.createObjectURL(selectedFile),
-                name: selectedFile.name,
-                type: selectedFile.type,
-                file: selectedFile,
-            };
-            setFile(newFile); // Atualiza o estado com o novo arquivo
-
-            console.log('Arquivo selecionado:', newFile);
-            handleSendMessage(newFile); // Passa o novo arquivo selecionado para a função
-            setModalFileVisible(false);
-        }
-    };
-    input.click();
-};
-
-const pickDocument = async () => {
-    // Lógica específica para a versão web, criando um input file
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.onchange = (event) => {
-        const selectedFile = event.target.files[0];
-        
-        if (selectedFile) {
-            const newFile = {
-                uri: URL.createObjectURL(selectedFile),
-                name: selectedFile.name,
-                type: selectedFile.type,
-                file: selectedFile,
-            };
-            setFile(newFile); // Atualiza o estado com o novo arquivo
-
-            console.log('Arquivo selecionado:', newFile);
-            handleSendMessage(newFile); // Passa o novo arquivo selecionado para a função
-            setModalFileVisible(false);
-        }
-    };
-    input.click();
-};
-
-    
-
-    /*FUNÇÃO PARA DELETAR MENSAGENS */
-	const confirmDeleteMessage = (messageId) => {
-        console.log(messageId)
-        setSelectedMessageId(messageId);
-        setModalVisible(true);
-    };
-    
-
-	const handlerDeleteMessage = async (messageId) => {
-		try {
-			const token = await AsyncStorage.getItem('token');
-			if (!token) {
-				throw new Error('Token não encontrado. Por favor, faça login novamente.');
-			}
-
-			await axios.delete(`https://localhost:7140/api/ChatGrupo/${messageId}`, {
-				headers: {
-					Authorization: `Bearer ${token}`,
-				}
-			});
-
-			// Remove a mensagem excluída do estado de mensagens
-			setMessages((prevMessages) => prevMessages.filter((msg) => msg.Id_Mensagem_Grupo !== messageId));
+            // Remove a mensagem excluída do estado de mensagens
+            setMessages((prevMessages) => prevMessages.filter((msg) => msg.Id_Mensagem_Grupo !== messageId));
             fetchMessages();
-		} catch (error) {
-			Alert.alert('Erro', error.message || 'Não foi possível excluir a mensagem.');
-		}
-	};	
+        } catch (error) {
+            Alert.alert('Erro', error.message || 'Não foi possível excluir a mensagem.');
+        }
+    };
 
-    
+
 
     const openImageModal = (uri) => {
         setSelectedImageUri(uri);
@@ -357,39 +356,39 @@ const pickDocument = async () => {
         // console.log("Item data:", item);
 
 
-		return (
-				<View style={[styles.messageContainer, item.Id_Usuario_Emissor === myId ? styles.userMessage : styles.otherMessage]}>
-                    <View style={styles.messageinfs}>
-                        {!item.myId && (
-                                <Text style={styles.senderName}>{item.senderName}</Text>
-                            )}
-                        {item.Localizacao_Arquivo ? (
+        return (
+            <View style={[styles.messageContainer, item.Id_Usuario_Emissor === myId ? styles.userMessage : styles.otherMessage]}>
+                <View style={styles.messageinfs}>
+                    {!item.myId && (
+                        <Text style={styles.senderName}>{item.senderName}</Text>
+                    )}
+                    {item.Localizacao_Arquivo ? (
                         <TouchableOpacity onPress={() => openImageModal(`https://localhost:7140/api/Postagem/imagem/${item.Localizacao_Arquivo}`)}>
-                            <Image 
+                            <Image
                                 source={{ uri: `https://localhost:7140/api/Postagem/imagem/${item.Localizacao_Arquivo}` }}
                                 style={styles.messageImage}
                             />
                         </TouchableOpacity>
                     ) : null}
-                        <Text style={item.isSent ? styles.userText : styles.otherText}>
+                    <Text style={item.isSent ? styles.userText : styles.otherText}>
                         {item.Mensagem}
-                        </Text>
-                        <Text style={styles.timestamp}>
-                            {item.Timestamp.toLocaleString()}
-                        </Text>
-                    </View>
-                    {(item.Id_Usuario_Emissor === myId || nivelDeAcesso === 1) && (
-					<TouchableOpacity style={styles.deleteButton} onPress={() => confirmDeleteMessage(item.Id_Mensagem_Grupo)}>
-						<Ionicons name="trash" style={styles.deleteButtonText} />
-					</TouchableOpacity>
-					)}
-				</View>
-			);
-	};
+                    </Text>
+                    <Text style={styles.timestamp}>
+                        {item.Timestamp.toLocaleString()}
+                    </Text>
+                </View>
+                {(item.Id_Usuario_Emissor === myId || nivelDeAcesso === 1) && (
+                    <TouchableOpacity style={styles.deleteButton} onPress={() => confirmDeleteMessage(item.Id_Mensagem_Grupo)}>
+                        <Ionicons name="trash" style={styles.deleteButtonText} />
+                    </TouchableOpacity>
+                )}
+            </View>
+        );
+    };
 
     return (
-        <KeyboardAvoidingView 
-            style={styles.container} 
+        <KeyboardAvoidingView
+            style={styles.container}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             keyboardVerticalOffset={0} // Ajuste este valor conforme necessário
         >
@@ -400,9 +399,9 @@ const pickDocument = async () => {
                     <Ionicons name="arrow-back" size={24} color={colors.text} />
                 </TouchableOpacity>
                 {/* Imagem do Grupo */}
-                <Image 
-                    source={avatar} 
-                    style={styles.avatarHeader} 
+                <Image
+                    source={avatar}
+                    style={styles.avatarHeader}
                 />
                 {/* Nome da Conversa com funcionalidade de clique */}
                 <TouchableOpacity onPress={() => setIsGroupInfoVisible(true)} style={styles.nameContainer}>
@@ -412,30 +411,30 @@ const pickDocument = async () => {
 
             {/* Lista de Mensagens */}
             <FlatList
-				data={messages}
-				renderItem={renderItem}
-				keyExtractor={keyExtractor}
-				ref={flatListRef}
-				contentContainerStyle={{ paddingBottom: 20 }}
+                data={messages}
+                renderItem={renderItem}
+                keyExtractor={keyExtractor}
+                ref={flatListRef}
+                contentContainerStyle={{ paddingBottom: 20 }}
                 onEndReachedThreshold={0}
-			/>
+            />
 
             {/* Input de Mensagem */}
             <View style={styles.inputContainer}>
-				<TextInput
-					style={styles.input}
-					value={message}
-					onChangeText={setMessage}
-					placeholder="Digite sua mensagem..."
-					placeholderTextColor={colors.border}
-				/>
-				<TouchableOpacity onPress={handleSendMessage}>
-					<Ionicons name="send" size={15} color={colors.text} />
-				</TouchableOpacity>
+                <TextInput
+                    style={styles.input}
+                    value={message}
+                    onChangeText={setMessage}
+                    placeholder="Digite sua mensagem..."
+                    placeholderTextColor={colors.border}
+                />
+                <TouchableOpacity onPress={handleSendMessage}>
+                    <Ionicons name="send" size={15} color={colors.text} />
+                </TouchableOpacity>
                 {(nivelDeAcesso === 1) && (
                     <TouchableOpacity onPress={selectFileMessage}>
-					    <Ionicons name="ellipsis-vertical" size={15} color={colors.text} />
-				    </TouchableOpacity>
+                        <Ionicons name="ellipsis-vertical" size={15} color={colors.text} />
+                    </TouchableOpacity>
                 )}
             </View>
 
@@ -447,59 +446,59 @@ const pickDocument = async () => {
                 animationType="slide"
                 onRequestClose={() => setIsGroupInfoVisible(false)}
             >
-                <TouchableOpacity 
-                    style={styles.modalOverlay} 
-                    activeOpacity={1} 
+                <TouchableOpacity
+                    style={styles.modalOverlay}
+                    activeOpacity={1}
                     onPressOut={() => setIsGroupInfoVisible(false)}
                 >
                 </TouchableOpacity>
             </Modal>
 
             <Modal
-				animationType="slide"
-				transparent={true}
-				visible={modalFileVisible}
-				onRequestClose={() => setModalFileVisible(false)}
-			>
-				<View style={styles.modalFileOverlay}>
-					<View style={styles.modalFileContainer}>
-						<TouchableOpacity onPress={pickFileWeb}>
-						<Ionicons name="image" size={24} color={colors.primary} />
-						</TouchableOpacity>
-						<TouchableOpacity onPress={pickDocument}>
-						<Ionicons name="document-text" size={24} color={colors.primary} />
-						</TouchableOpacity>
-					</View>
-				</View>
-			</Modal>
+                animationType="slide"
+                transparent={true}
+                visible={modalFileVisible}
+                onRequestClose={() => setModalFileVisible(false)}
+            >
+                <View style={styles.modalFileOverlay}>
+                    <View style={styles.modalFileContainer}>
+                        <TouchableOpacity onPress={pickFileWeb}>
+                            <Ionicons name="image" size={24} color={colors.primary} />
+                        </TouchableOpacity>
+                        <TouchableOpacity onPress={pickDocument}>
+                            <Ionicons name="document-text" size={24} color={colors.primary} />
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
 
             {/* Modal de confirmação de exclusão */}
-			<Modal
-				animationType="slide"
-				transparent={true}
-				visible={modalVisible}
-				onRequestClose={() => {
-					setModalVisible(!modalVisible);
-				}}>
-				<View style={styles.modalView}>
-					<Text style={styles.modalText}>Tem certeza que deseja excluir esta mensagem?</Text>
-					<View style={styles.modalButtons}>
-						<TouchableOpacity
-							style={[styles.button, styles.buttonDelete]}
-							onPress={() => {
-								handlerDeleteMessage(selectedMessageId);
-								setModalVisible(false);
-							}}>
-							<Text style={styles.buttonText}>Excluir</Text>
-						</TouchableOpacity>
-						<TouchableOpacity
-							style={[styles.button, styles.buttonCancel]}
-							onPress={() => setModalVisible(false)}>
-							<Text style={styles.buttonText}>Cancelar</Text>
-						</TouchableOpacity>
-					</View>
-				</View>
-			</Modal>
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={modalVisible}
+                onRequestClose={() => {
+                    setModalVisible(!modalVisible);
+                }}>
+                <View style={styles.modalView}>
+                    <Text style={styles.modalText}>Tem certeza que deseja excluir esta mensagem?</Text>
+                    <View style={styles.modalButtons}>
+                        <TouchableOpacity
+                            style={[styles.button, styles.buttonDelete]}
+                            onPress={() => {
+                                handlerDeleteMessage(selectedMessageId);
+                                setModalVisible(false);
+                            }}>
+                            <Text style={styles.buttonText}>Excluir</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[styles.button, styles.buttonCancel]}
+                            onPress={() => setModalVisible(false)}>
+                            <Text style={styles.buttonText}>Cancelar</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
 
 
             <Modal
@@ -515,7 +514,24 @@ const pickDocument = async () => {
                 </View>
             </Modal>
 
-            
+            <Modal
+                transparent={true}
+                animationType="slide"
+                visible={modalErrorVisible}
+                onRequestClose={() => setModalErrorVisible(false)}
+            >
+                <View style={styles.centeredView}>
+                    <View style={styles.modalView}>
+                        <Text style={styles.modalText}>Conteúdo indevido, esta mensagem não pode ser enviada</Text>
+                        <TouchableOpacity
+                            style={styles.button}
+                            onPress={() => setModalVisible(false)}
+                        >
+                            <Text style={styles.buttonText}>Fechar</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
 
 
         </KeyboardAvoidingView>
@@ -566,10 +582,10 @@ const styles = StyleSheet.create({
         padding: 5,
     },
     messageContainer: {
-		marginVertical: 5,
-		padding: 10,
-		borderRadius: 10,
-	},
+        marginVertical: 5,
+        padding: 10,
+        borderRadius: 10,
+    },
     message: {
         padding: 10,
         borderRadius: 10,
@@ -577,17 +593,17 @@ const styles = StyleSheet.create({
         maxWidth: '80%',
     },
     userMessage: {
-		backgroundColor: colors.border,
-		alignSelf: 'flex-end',
-		display: 'flex',
-		flexDirection: 'row'
-	},
-	otherMessage: {
+        backgroundColor: colors.border,
+        alignSelf: 'flex-end',
+        display: 'flex',
+        flexDirection: 'row'
+    },
+    otherMessage: {
         backgroundColor: colors.secondary,
-		alignSelf: 'flex-start',
-		display: 'flex',
-		flexDirection: 'row'
-	},
+        alignSelf: 'flex-start',
+        display: 'flex',
+        flexDirection: 'row'
+    },
     userText: {
         color: colors.primary,
     },
@@ -595,24 +611,24 @@ const styles = StyleSheet.create({
         color: colors.text,
     },
     inputContainer: {
-		flexDirection: 'row',
-		alignItems: 'center',
-		padding: 15,
-		backgroundColor: colors.primary,
-		borderTopWidth: 1,
-		borderTopColor: colors.border
-	},
-	input: {
-		flex: 1,
-		height: 50,
-		borderColor: colors.border,
-		borderWidth: 1,
-		borderRadius: 8,
-		paddingHorizontal: 10,
-		color: colors.text,
-		backgroundColor: colors.secondary,
-		marginRight: 10
-	},
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 15,
+        backgroundColor: colors.primary,
+        borderTopWidth: 1,
+        borderTopColor: colors.border
+    },
+    input: {
+        flex: 1,
+        height: 50,
+        borderColor: colors.border,
+        borderWidth: 1,
+        borderRadius: 8,
+        paddingHorizontal: 10,
+        color: colors.text,
+        backgroundColor: colors.secondary,
+        marginRight: 10
+    },
     sendButton: {
         justifyContent: 'center',
         alignItems: 'center',
@@ -624,25 +640,25 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     modalFileOverlay: {
-		position: 'absolute',
-		bottom: 0,
-		left: 0,
-		marginBottom: 100,
-		width: '100%',
-		height: 'auto'
-	},
-	modalFileContainer: {
-		display: 'flex',
-		flexDirection: 'row',
-		width: 100,
-		marginBottom: 20,
-		padding: 5,
-		backgroundColor: 'white',
-		borderRadius: 10,
-		alignItems: 'center',
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        marginBottom: 100,
+        width: '100%',
+        height: 'auto'
+    },
+    modalFileContainer: {
+        display: 'flex',
+        flexDirection: 'row',
+        width: 100,
+        marginBottom: 20,
+        padding: 5,
+        backgroundColor: 'white',
+        borderRadius: 10,
+        alignItems: 'center',
         gap: 5,
         justifyContent: 'center'
-	},
+    },
     modalContent: {
         backgroundColor: colors.modalContent,
         padding: 20,
@@ -696,41 +712,41 @@ const styles = StyleSheet.create({
         marginBottom: 10,
     },
     modalView: {
-		marginTop: 200,
-		backgroundColor: 'white',
-		borderRadius: 20,
-		padding: 35,
-		alignItems: 'center',
-		shadowColor: '#000',
-		shadowOffset: {
-			width: 0,
-			height: 2,
-		},
-		shadowOpacity: 0.25,
-		shadowRadius: 4,
-		elevation: 5,
-	},
+        marginTop: 200,
+        backgroundColor: 'white',
+        borderRadius: 20,
+        padding: 35,
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 5,
+    },
     modalText: {
-		marginBottom: 15,
-		textAlign: 'center',
-	},
+        marginBottom: 15,
+        textAlign: 'center',
+    },
     modalButtons: {
-		display: 'flex',
+        display: 'flex',
         flexDirection: 'row',
-	},
+    },
     button: {
-		width: 100,
-		borderRadius: 10,
-		padding: 10,
-		elevation: 2,
-		backgroundColor: colors.primary,
-		flex: 1,
-		marginHorizontal: 5,
-	},
+        width: 100,
+        borderRadius: 10,
+        padding: 10,
+        elevation: 2,
+        backgroundColor: colors.primary,
+        flex: 1,
+        marginHorizontal: 5,
+    },
     buttonText: {
-		color: 'white',
-		textAlign: 'center',
-	},
+        color: 'white',
+        textAlign: 'center',
+    },
     senderName: {
         fontSize: 14,
         color: colors.border,
