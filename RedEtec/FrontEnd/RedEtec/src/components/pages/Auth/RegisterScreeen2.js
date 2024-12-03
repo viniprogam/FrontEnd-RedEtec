@@ -13,7 +13,7 @@ export default function RegisterScreen2() {
 
     const handleNext = () => {
         // Navega para a próxima tela e passa os dados coletados
-        navigation.navigate('RegisterScreenImg', { Nome_Usuario, Senha_Usuario });
+        navigation.navigate('RegisterScreen3', { Nome_Usuario, Senha_Usuario });
     };
 
     return (

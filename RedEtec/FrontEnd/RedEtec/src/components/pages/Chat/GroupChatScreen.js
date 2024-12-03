@@ -171,9 +171,10 @@ export default function GroupChatScreen({ navigation, route }) {
     };
 
     useEffect(() => {
+        userLog();
         fetchMessages();
         fetchIntervalRef.current = setInterval(fetchMessages, 400);
-        userLog();
+        
 
         return () => {
             clearInterval(fetchIntervalRef.current);
@@ -198,6 +199,7 @@ export default function GroupChatScreen({ navigation, route }) {
                 }
                 if (file) {
                     formData.append('file', file.file);
+                    setModalErrorVisible(false)
                 }
 
                 formData.forEach((value, key) => {
@@ -218,6 +220,7 @@ export default function GroupChatScreen({ navigation, route }) {
                 );
 
                 if (response.status === 200) {
+                    setModalErrorVisible(false)
                     const newMessage = {
                         Id_Grupo: groupId,
                         Mensagem: message.trim(),
@@ -225,15 +228,15 @@ export default function GroupChatScreen({ navigation, route }) {
                         Timestamp: new Date(),
                         isSent: true
                     };
+                    userLog();
                     setMessages(prevMessages => [...prevMessages, newMessage]);
                     setMessage('');
                     setFile(null); // Limpa o arquivo selecionado
                     flatListRef.current.scrollToEnd({ animated: true });
-                } else {
-                    setModalVisible(true); // Mostra o modal quando houver um erro
                 }
             } catch (err) {
-                setModalVisible(true); // Mostra o modal quando houver um erro
+                setModalErrorVisible(true); // Mostra o modal quando houver um erro
+                // setModalErrorVisible(false)
             } finally {
                 setLoading(false);
             }
@@ -281,6 +284,7 @@ export default function GroupChatScreen({ navigation, route }) {
             }
         };
         input.click();
+        setModalFileVisible(false);
     };
 
     const pickDocument = async () => {
@@ -332,7 +336,6 @@ export default function GroupChatScreen({ navigation, route }) {
 
             // Remove a mensagem excluída do estado de mensagens
             setMessages((prevMessages) => prevMessages.filter((msg) => msg.Id_Mensagem_Grupo !== messageId));
-            fetchMessages();
         } catch (error) {
             Alert.alert('Erro', error.message || 'Não foi possível excluir a mensagem.');
         }
@@ -465,9 +468,9 @@ export default function GroupChatScreen({ navigation, route }) {
                         <TouchableOpacity onPress={pickFileWeb}>
                             <Ionicons name="image" size={24} color={colors.primary} />
                         </TouchableOpacity>
-                        <TouchableOpacity onPress={pickDocument}>
+                        {/* <TouchableOpacity onPress={pickDocument}>
                             <Ionicons name="document-text" size={24} color={colors.primary} />
-                        </TouchableOpacity>
+                        </TouchableOpacity> */}
                     </View>
                 </View>
             </Modal>
@@ -522,10 +525,10 @@ export default function GroupChatScreen({ navigation, route }) {
             >
                 <View style={styles.centeredView}>
                     <View style={styles.modalView}>
-                        <Text style={styles.modalText}>Conteúdo indevido, esta mensagem não pode ser enviada</Text>
+                        <Text style={styles.modalText}>Esta mensagem não pode ser enviada</Text>
                         <TouchableOpacity
                             style={styles.button}
-                            onPress={() => setModalVisible(false)}
+                            onPress={() => setModalErrorVisible(false)}
                         >
                             <Text style={styles.buttonText}>Fechar</Text>
                         </TouchableOpacity>

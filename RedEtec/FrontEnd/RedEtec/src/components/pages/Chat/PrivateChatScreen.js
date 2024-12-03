@@ -115,9 +115,10 @@ export default function PrivateChatScreen({ route, navigation }) {
 
 
 	useEffect(() => {
+		userLog();
 		fetchMessages();
 		fetchIntervalRef.current = setInterval(fetchMessages, 300);
-		userLog();
+		
 
 		return () => {
 			clearInterval(fetchIntervalRef.current);
@@ -152,8 +153,10 @@ export default function PrivateChatScreen({ route, navigation }) {
 					}
 				);
 
+				setModalErrorVisible(false)
 
 				if (response.status === 200) {
+					setModalErrorVisible(false)
 					const newMessage = {
 						Mensagem: message.trim(),
 						ReceptorId: userId,
@@ -161,6 +164,7 @@ export default function PrivateChatScreen({ route, navigation }) {
 						Timestamp: new Date(),
 						isSent: true
 					};
+					userLog();
 					setMessages(prevMessages => [...prevMessages, newMessage]);
 					setMessage('');
 					flatListRef.current.scrollToEnd({ animated: true });
@@ -168,7 +172,7 @@ export default function PrivateChatScreen({ route, navigation }) {
 					throw new Error('Não foi possível enviar a mensagem. Tente novamente.');
 				}
 			} catch (err) {
-				setModalVisible(true); // Mostra o modal quando houver um erro
+				setModalErrorVisible(true); // Mostra o modal quando houver um erro
 			} finally {
 				setLoading(false);
 			}
@@ -341,10 +345,10 @@ export default function PrivateChatScreen({ route, navigation }) {
             >
                 <View style={styles.centeredView}>
                     <View style={styles.modalView}>
-                        <Text style={styles.modalText}>Conteúdo indevido, esta mensagem não pode ser enviada</Text>
+                        <Text style={styles.modalText}>Esta mensagem não pode ser enviada</Text>
                         <TouchableOpacity
                             style={styles.button}
-                            onPress={() => setModalVisible(false)}
+                            onPress={() => setModalErrorVisible(false)}
                         >
                             <Text style={styles.buttonText}>Fechar</Text>
                         </TouchableOpacity>

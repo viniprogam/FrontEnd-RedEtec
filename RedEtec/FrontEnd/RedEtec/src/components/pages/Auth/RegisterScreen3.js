@@ -15,6 +15,7 @@ export default function RegisterScreen3() {
     const [selectedArea, setSelectedArea] = useState('Selecione a área'); 
     const [selectedAreaId, setSelectedAreaId] = useState(null);
     const [showSelectOptions, setShowSelectOptions] = useState(false); 
+    const [modalErrorVisible, setModalErrorVisible] = useState(false);
 
     const handleAreaSelect = (area) => {
         setSelectedArea(area.Nome_Curso); 
@@ -29,7 +30,7 @@ export default function RegisterScreen3() {
 
     const navigation = useNavigation();
     const route = useRoute();
-    const { Nome_Usuario, Senha_Usuario, ProfileImage } = route.params;
+    const { Nome_Usuario, Senha_Usuario } = route.params;
 
     const [communities, setCommunities] = useState([]);
 
@@ -50,6 +51,7 @@ export default function RegisterScreen3() {
     const handleRegister = async () => {
         if (!validateCPF(CPF_Usuario)) {
             setErrorMessage("CPF inválido. Por favor, verifique o número informado.");
+            setModalErrorVisible(true)
             return; 
         } else {
             setErrorMessage('');
@@ -83,6 +85,7 @@ export default function RegisterScreen3() {
             console.error('Erro ao registrar:', error);
             const errorMessage = error.response?.data?.message || 'Não foi possível realizar o cadastro. Tente novamente.';
             Alert.alert("Erro", errorMessage);
+            setModalErrorVisible(true)
         }
     };
 
@@ -223,6 +226,26 @@ export default function RegisterScreen3() {
             >
                 <Text style={styles.buttonText}>Finalizar</Text>
             </TouchableOpacity>
+
+
+            <Modal
+                transparent={true}
+                animationType="slide"
+                visible={modalErrorVisible}
+                onRequestClose={() => setModalErrorVisible(false)}
+            >
+                <View style={styles.centeredView}>
+                    <View style={styles.modalView}>
+                        <Text style={styles.modalText}>Não foi possível realizar o cadastro. Tente novamente.</Text>
+                        <TouchableOpacity
+                            style={styles.button}
+                            onPress={() => setModalErrorVisible(false)}
+                        >
+                            <Text style={styles.buttonText}>Fechar</Text>
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </Modal>
         </View>
     );
 }
@@ -237,6 +260,38 @@ const colors = {
 };
 
 const styles = StyleSheet.create({
+    modalView: {
+		marginTop: 200,
+		backgroundColor: 'white',
+		borderRadius: 20,
+		padding: 35,
+		alignItems: 'center',
+		shadowColor: '#000',
+		shadowOffset: {
+			width: 0,
+			height: 2,
+		},
+		shadowOpacity: 0.25,
+		shadowRadius: 4,
+		elevation: 5,
+	},
+    modalText: {
+		marginBottom: 15,
+		textAlign: 'center',
+	},
+    button: {
+		width: 100,
+		borderRadius: 10,
+		padding: 10,
+		elevation: 2,
+		backgroundColor: colors.primary,
+		flex: 1,
+		marginHorizontal: 5,
+	},
+    buttonText: {
+		color: 'white',
+		textAlign: 'center',
+	},
     container: {
         flex: 1,
         padding: 20,
