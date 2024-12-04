@@ -172,7 +172,11 @@ export default function PrivateChatScreen({ route, navigation }) {
 					throw new Error('Não foi possível enviar a mensagem. Tente novamente.');
 				}
 			} catch (err) {
-				setModalErrorVisible(true); // Mostra o modal quando houver um erro
+				if(err.status === 500) {
+					setModalErrorVisible(true); // Mostra o modal quando houver um erro
+				} else {
+					Alert.alert('Mensagem vazia', 'Por favor, digite uma mensagem antes de enviar.');
+				}
 			} finally {
 				setLoading(false);
 			}

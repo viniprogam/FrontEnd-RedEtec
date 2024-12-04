@@ -242,8 +242,11 @@ export default function GroupChatScreen({ navigation, route }) {
             } catch (err) {
                 if(err.status === 500) {
                     setModalErrorVisible(false); // Mostra o modal quando houver um erro na requisição
-                } else {
+                } else if(err.status === 400) {
                     setModalErrorVisible(true)
+                    setMessage('');
+                    setFile(null);
+                } else {
                     setMessage('');
                     setFile(null);
                 }
